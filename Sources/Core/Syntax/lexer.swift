@@ -19,8 +19,19 @@ public class Lexer {
     get { return position >= source.count || current() == Token.EOF }
   }
   
+  public init() { }
+  
   public init(_ source: String) {
-    self.source = source;
+    self.source = source
+  }
+  
+  public func scan(_ source: String) -> [Token] {
+    self.source = source
+    self.position = 0
+    self.line = 0
+    self.column = 1
+    self.tokens = [Token]()
+    return scan()
   }
   
   public func scan() -> [Token] {
@@ -154,7 +165,8 @@ public class Lexer {
       next()
       while(isDigit(current())) { next () }
     }
-    addToken(.NumberLiteral, literal: Double(source[start..<position]))
+    let number = source[start..<position];
+    addToken(.NumberLiteral, literal: number.contains(".") ? Double(number) : Int(number))
   }
   
   private func scanIdentifier() {

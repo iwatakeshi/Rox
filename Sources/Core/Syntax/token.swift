@@ -10,6 +10,7 @@ import Foundation
 
 public enum TokenType {
   /* Literals */
+  
   // "Hello, World!" or 'Hello, World!'
   case StringLiteral
   // 12
@@ -29,7 +30,6 @@ public enum TokenType {
   case Operator(String)
 
   /* Punctuations */
-  // '(':
   case Punctuation(String)
 
   /* Others */
@@ -37,14 +37,28 @@ public enum TokenType {
   case EOF
 }
 
-
+/// A structure representing a lexeme
 public struct Token {
+  /// Token type
   private(set) var type: TokenType
+  /// Token lexeme
   private(set) var lexeme: String
+  /// Token literal value
   private(set) var literal: Any?
+  /// Token location
   private(set) var location: Location
+  /// The end-of-file string
   static private(set) var EOF : String = "\0"
-  
+  /**
+   Initializes a new token
+   
+   - Parameters:
+   - type: The token type
+   - lexeme: The scanned lexeme
+   - literal: The scanned literal value
+   
+   - Returns: An instance of Token
+   */
   public init(_ type: TokenType, _ lexeme: String, _ literal: Any?, _ location: Location) {
     self.type = type
     self.lexeme = lexeme
