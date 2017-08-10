@@ -5,6 +5,7 @@ public class Rox {
       print("> ", separator: " ", terminator: "")
       if let source = readLine() {
         Rox.run(source: source)
+        errored = false
       }
     }
   }
@@ -17,8 +18,8 @@ public class Rox {
     // for token in tokens {
     //   print(token)
     // }
-    print(ASTPrinter().print(expression: expression!))
-    if errored { fatalError() }
+    print(ASTPrinter().print(expression))
+    if errored { return }
   }
 
   public static func error(_ location: Location, _ message: String) {
@@ -34,7 +35,7 @@ public class Rox {
   }
 
   public static func report(_ location: Location, _ origin: String, _ message: String) {
-    print("[ln \(location.line),col \(location.column)] error \(origin): \(message)")
+    print("[ln \(location.line), col \(location.column)] error \(origin): \(message)")
     errored = true
   }
 }

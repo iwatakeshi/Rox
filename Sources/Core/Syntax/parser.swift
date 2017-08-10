@@ -12,63 +12,67 @@ class Parser {
   }
   
   public func parse() -> Expression? {
-    return parseExpression()
+    do {
+      return try parseExpression()
+    } catch {
+      return nil
+    }
   }
 
   /* Expressions */
 
-  private func parseExpression() -> Expression {
-    return parseEquality()
+  private func parseExpression() throws -> Expression {
+    return try parseEquality()
   }
 
-  private func parseEquality() -> Expression {
-    var expression = parseComparison()
+  private func parseEquality() throws -> Expression {
+    var expression = try parseComparison()
     while match(.Operator("!="), .Operator("==")) {
       let `operator` = previous()
-      let right = parseComparison()
+      let right = try parseComparison()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
   }
 
-  private func parseComparison() -> Expression {
-    var expression = parseAddition()
+  private func parseComparison() throws -> Expression {
+    var expression = try parseAddition()
     while match(.Operator(">"), .Operator(">="), .Operator("<"), .Operator("<=")) {
       let `operator` = previous()
-      let right = parseAddition()
+      let right = try parseAddition()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
   }
 
-  private func parseAddition() -> Expression {
-    var expression = parseMultiplication()
+  private func parseAddition() throws -> Expression {
+    var expression = try parseMultiplication()
 
     while match(.Operator("-"), .Operator("+")) {
       let `operator` = previous()
-      let right = parseMultiplication()
+      let right = try parseMultiplication()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
   }
 
-  private func parseMultiplication() -> Expression {
-    var expression = parseUnary()
+  private func parseMultiplication() throws -> Expression {
+    var expression = try parseUnary()
     while match(.Operator("/"), .Operator("*")) {
       let `operator` = previous()
-      let right = parseMultiplication()
+      let right = try parseMultiplication()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
   }
 
-  private func parseUnary() -> Expression {
+  private func parseUnary() throws -> Expression {
     if match(.Operator("-"), .Operator("!")) {
       let `operator` = previous()
-      let right = parseUnary()
+      let right = try parseUnary()
       return Expression.Unary(`operator`, right)
     }
-    return try! parsePrimary()
+    return try parsePrimary()
   }
 
   private func parsePrimary() throws -> Expression {
@@ -81,8 +85,8 @@ class Parser {
     }
 
     if match(.Punctuation("(")) {
-      let expression = parseExpression()
-      _ = try? consume(.Operator(")"), "Expect ')' after expression")
+      let expression = try parseExpression()
+      try consume(.Punctuation(")"), "Expect ')' after expression")
       return Expression.Parenthesized(expression)
     }
 
@@ -117,7 +121,7 @@ class Parser {
   }
 
   private func previous () -> Token {
-    return tokens[position - 1]
+    return position > 0 ? tokens[position - 1] : tokens[position]
   }
 
   @discardableResult
@@ -127,7 +131,7 @@ class Parser {
   }
 
   private func error(_ token: Token, _ message: String) -> ParserException {
-    Rox.error(token.location, "Unterminated string")
+    Rox.error(token.location, message)
     return ParserException.parse
   }
 

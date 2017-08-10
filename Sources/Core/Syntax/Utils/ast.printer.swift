@@ -16,7 +16,7 @@ public class ASTPrinter: ExpressionVisitor {
   }
   
   public func visit<T: Any>(visitor: Expression.Literal) -> T {
-    return visitor.value == nil ? "null" as! T : String(describing: visitor.value) as! T
+    return String(describing: visitor.value) as! T
   }
   
   public func visit<T: Any>(visitor: Expression.Parenthesized) -> T {
@@ -37,7 +37,7 @@ public class ASTPrinter: ExpressionVisitor {
     return str
   }
   
-  public func print(expression: Expression) -> String {
-    return expression.accept(visitor: self)
+  public func print(_ expression: Expression?) -> String {
+    return expression != nil ? expression!.accept(visitor: self) : ""
   }
 }

@@ -35,9 +35,9 @@ public class Expression {
   }
   
   public class Literal: Expression {
-    private(set) var value: Any?
+    private(set) var value: Any
     public init(_ value: Any?) {
-      self.value = value
+      self.value = value == nil ? "null" : value!
     }
     
     public override func accept<T>(visitor: ExpressionVisitor) -> T {
