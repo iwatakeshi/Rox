@@ -7,7 +7,7 @@ sudo: required
 
 dist: trusty
 
-osx_image: xcode8
+osx_image: xcode9
 
 script:
   - swift build
