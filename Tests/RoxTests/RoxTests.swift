@@ -3,44 +3,40 @@ import Core
 
 class RoxTests: XCTestCase {
   
-  private func create(_ type: TokenType, _ lexeme: String, _ literal: Any?, _ location: Location) -> Token {
-    return Token(type: type, lexeme: lexeme, literal: literal, location: location)
-  }
-  
   private func createEOF(_ location: Location) -> Token {
-    return Token(type: .EOF, lexeme: "", literal: nil, location: location)
+    return Token(.EOF, "", nil, location)
   }
   
   func testHelloWorld() {
     XCTAssertEqual(Lexer("Hello World!").scan(), [
-      create(.Identifier, "Hello", "Hello", Location(position: 5, line: 1, column: 6)),
-      create(.Identifier, "World", "World", Location(position: 11, line: 1, column: 12)),
-      create(.Operator("!"), "!", nil, Location(position: 12, line: 1, column: 13)),
-      createEOF(Location(position: 13, line: 1, column: 14))
+      Token(.Identifier, "Hello", "Hello", Location(5, 1, 6)),
+      Token(.Identifier, "World", "World", Location(11, 1, 12)),
+      Token(.Operator("!"), "!", nil, Location(12, 1, 13)),
+      createEOF(Location(13, 1, 14))
       ], "Tokens should be equal")
   }
 
   func testString() {
     XCTAssertEqual(Lexer("\"Hello World!\"").scan(), [
-      create(.StringLiteral, "\"Hello World!\"", "Hello World!", Location(position: 11, line: 1, column: 12)),
-      createEOF(Location(position: 13, line: 1, column: 14))
+      Token(.StringLiteral, "\"Hello World!\"", "Hello World!", Location(11, 1, 12)),
+      createEOF(Location(13, 1, 14))
     ], "Tokens should be equal")
   }
   
   func testNumber() {
     XCTAssertEqual(Lexer("1").scan(), [
-      create(.NumberLiteral, "1", 1, Location(position: 1, line: 1, column: 2)),
-      createEOF(Location(position: 2, line: 1, column: 3))
+      Token(.NumberLiteral, "1", 1, Location(1, 1, 2)),
+      createEOF(Location(2, 1, 3))
     ], "Tokens should be equal")
     
     XCTAssertEqual(Lexer("1.0").scan(), [
-      create(.NumberLiteral, "1.0", 1.0, Location(position: 3, line: 1, column: 4)),
-      createEOF(Location(position: 4, line: 1, column: 5))
+      Token(.NumberLiteral, "1.0", 1.0, Location(3, 1, 4)),
+      createEOF(Location(4, 1, 5))
     ], "Tokens should be equal")
     
     XCTAssertNotEqual(Lexer("1.0.0").scan(), [
-      create(.NumberLiteral, "1.0.0", 1.0, Location(position: 5, line: 1, column: 6)),
-      createEOF(Location(position: 6, line: 1, column: 7))
+      Token(.NumberLiteral, "1.0.0", 1.0, Location(5, 1, 6)),
+      createEOF(Location(6, 1, 7))
       ], "Tokens should be equal")
   }
 

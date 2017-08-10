@@ -45,7 +45,7 @@ public struct Token {
   private(set) var location: Location
   static private(set) var EOF : String = "\0"
   
-  public init(type: TokenType, lexeme: String, literal: Any?, location: Location) {
+  public init(_ type: TokenType, _ lexeme: String, _ literal: Any?, _ location: Location) {
     self.type = type
     self.lexeme = lexeme
     self.literal = literal

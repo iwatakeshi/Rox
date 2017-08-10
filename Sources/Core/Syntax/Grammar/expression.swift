@@ -12,7 +12,7 @@ public class Expression {
     private(set) var right: Expression
     private(set) var token: Token
     
-    public init(left: Expression, token: Token, right: Expression) {
+    public init(_ left: Expression, _ token: Token, _ right: Expression) {
       self.left = left
       self.token = token
       self.right = right
@@ -25,7 +25,7 @@ public class Expression {
   
   public class Parenthesized: Expression {
     private(set) var expression: Expression
-    public init(expression: Expression) {
+    public init(_ expression: Expression) {
       self.expression = expression
     }
     
@@ -36,7 +36,7 @@ public class Expression {
   
   public class Literal: Expression {
     private(set) var value: Any?
-    public init(value: Any?) {
+    public init(_ value: Any?) {
       self.value = value
     }
     
@@ -49,7 +49,7 @@ public class Expression {
   public class Unary: Expression {
     private(set) var `operator`: Token
     private(set) var right: Expression
-    public init(`operator`: Token, right: Expression) {
+    public init(_ `operator`: Token, _ right: Expression) {
       self.operator = `operator`
       self.right = right
     }

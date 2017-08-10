@@ -13,7 +13,7 @@ public struct Location {
   private(set) var line: Int = 1
   private(set) var column: Int = 1
   
-  public init(position: Int, line: Int, column: Int) {
+  public init(_ position: Int, _ line: Int, _ column: Int) {
     self.position = position
     self.line = line
     self.column = column
