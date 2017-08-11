@@ -9,14 +9,8 @@
 import Foundation
 import Core
 
-private func read(path: String) -> String {
-  let file = URL(fileURLWithPath: path)
-  do {
-    let source = try String(contentsOf: file)
-    return source
-  } catch {
-    return ""
-  }
+private func read(path: String) -> URL {
+  return URL(fileURLWithPath: path)
 }
 
 // private func parenthesized(_ center: Expression) -> Expression.Parenthesized {
@@ -53,7 +47,7 @@ let arguments = CommandLine.arguments
 if arguments.count > 2 {
   print("Usage: rox [script]")
 } else if arguments.count == 2 {
-  Rox.run(source: read(path: arguments[0]))
+  Rox.run(read(path: arguments[0]))
 } else {
   Rox.repl()
 }

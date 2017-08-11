@@ -24,3 +24,12 @@ unary          → ( "!" | "-" ) unary ;
 primary        → NUMBER | STRING | "false" | "true" | "nil"
                | "(" expression ")" ;
 ```
+
+## Types
+
+| Rox type  |	Swift representation   |
+|-----------|------------------------|
+| `null`	  |        `nil`           |
+| `boolean`	|        `Bool`          |
+| `number`	|        `Double`        |
+| `string`	|        `String`        |

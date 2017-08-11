@@ -19,6 +19,11 @@ public struct Location {
   
   /**
    Initializes a new location
+   */
+  public init() {}
+  
+  /**
+   Initializes a new location
    
    - Parameters:
    - position: The scanner current position

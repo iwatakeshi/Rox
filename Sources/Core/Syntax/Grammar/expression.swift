@@ -3,23 +3,23 @@ import Foundation
 public class Expression {
   public init() {}
   
-  public func accept<T>(visitor: ExpressionVisitor) -> T {
+  public func accept<T>(visitor: ExpressionVisitor) throws -> T {
     fatalError()
   }
   
   public class Binary: Expression {
     private(set) var left: Expression
     private(set) var right: Expression
-    private(set) var token: Token
+    private(set) var `operator`: Token
     
     public init(_ left: Expression, _ token: Token, _ right: Expression) {
       self.left = left
-      self.token = token
+      self.operator = token
       self.right = right
     }
     
-    public override func accept<T>(visitor: ExpressionVisitor) -> T {
-      return visitor.visit(visitor: self)
+    public override func accept<T>(visitor: ExpressionVisitor) throws -> T {
+      return try visitor.visit(visitor: self)!
     }
   }
   
@@ -29,8 +29,8 @@ public class Expression {
       self.expression = expression
     }
     
-    public override func accept<T>(visitor: ExpressionVisitor) -> T {
-      return visitor.visit(visitor: self)
+    public override func accept<T>(visitor: ExpressionVisitor) throws -> T {
+      return try visitor.visit(visitor: self)!
     }
   }
   
@@ -40,8 +40,8 @@ public class Expression {
       self.value = value == nil ? "null" : value!
     }
     
-    public override func accept<T>(visitor: ExpressionVisitor) -> T {
-      return visitor.visit(visitor: self)
+    public override func accept<T>(visitor: ExpressionVisitor) throws -> T {
+      return try visitor.visit(visitor: self)!
     }
     
   }
@@ -54,8 +54,8 @@ public class Expression {
       self.right = right
     }
     
-    public override func accept<T>(visitor: ExpressionVisitor) -> T {
-      return visitor.visit(visitor: self)
+    public override func accept<T>(visitor: ExpressionVisitor) throws -> T {
+      return try visitor.visit(visitor: self)!
     }
   }
   

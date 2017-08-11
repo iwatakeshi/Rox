@@ -9,8 +9,8 @@
 import Foundation
 
 public protocol ExpressionVisitor {
-  func visit<T: Any>(visitor: Expression.Binary) -> T
-  func visit<T: Any>(visitor: Expression.Literal) -> T
-  func visit<T: Any>(visitor: Expression.Parenthesized) -> T
-  func visit<T: Any>(visitor: Expression.Unary) -> T
+  func visit<T: Any>(visitor: Expression.Binary) throws -> T?
+  func visit<T: Any>(visitor: Expression.Literal) throws -> T?
+  func visit<T: Any>(visitor: Expression.Parenthesized) throws -> T?
+  func visit<T: Any>(visitor: Expression.Unary) throws -> T?
 }
