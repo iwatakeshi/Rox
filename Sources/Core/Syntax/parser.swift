@@ -130,9 +130,10 @@ public class Parser {
     throw error(current(), message)
   }
 
-  private func error(_ token: Token, _ message: String) -> ParserException {
-    Rox.error(token.location, message)
-    return ParserException.parse
+  private func error(_ token: Token, _ message: String) -> RoxParserException {
+    let exception = RoxParserException.error(token, message)
+    Rox.error(.RoxParserException(exception))
+    return exception
   }
 
   private func synchronize() {

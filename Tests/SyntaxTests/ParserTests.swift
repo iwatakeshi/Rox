@@ -8,12 +8,17 @@
 
 import XCTest
 import Core
+
 class ParserTests: XCTestCase {
   let lexer: Lexer = Lexer()
   let printer: ASTPrinter = ASTPrinter()
   
   private func parse(_ source: String) -> String {
-    return printer.print(Parser(lexer.scan(source)).parse())
+    do {
+      return try printer.print(Parser(lexer.scan(source)).parse())
+    } catch {
+      return ""
+    }
   }
   
   override func setUp() {

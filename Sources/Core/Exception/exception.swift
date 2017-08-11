@@ -1,11 +1,13 @@
-enum RoxException: Error {
-  case error
+public enum RoxRuntimeException : Error {
+  case error(Token, String)
 }
 
-enum RoxRuntimeException : Error {
-  case runtime
+public enum RoxParserException: Error {
+  case error(Token, String)
 }
 
-enum ParserException: Error {
-  case parse
+
+public enum RoxException {
+    case RoxRuntimeException(RoxRuntimeException)
+    case RoxParserException(RoxParserException)
 }

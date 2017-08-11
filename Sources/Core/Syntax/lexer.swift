@@ -15,6 +15,10 @@ public class Lexer {
   private(set) var line: Int = 1
   private(set) var column: Int = 1
   private var start: Int = 0
+  private var startLocation = Location()
+  private var endLocation: Location {
+    get { return Location(position, line, column) }
+  }
   var isEOF : Bool {
     get { return position >= source.count || current() == Token.EOF }
   }
@@ -37,9 +41,10 @@ public class Lexer {
   public func scan() -> [Token] {
     while !isEOF {
       start = position
+      startLocation = Location(position, line, column)
       scanToken()
     }
-    tokens.append(Token(.EOF, "", nil, Location(position + 1, line, column + 1)))
+    tokens.append(Token(.EOF, "", nil, startLocation))
     return tokens
   }
   
@@ -68,7 +73,7 @@ public class Lexer {
       case "\n": break
       case _ where isDigit(previous()): ScanNumber()
       case _ where isAlpha(previous()): scanIdentifier()
-      default: Rox.error(Location(position, line, column), "Unexpcted character '\(previous())'")
+      default: Rox.error(startLocation, "Unexpcted character '\(previous())'")
     }
   }
   
@@ -107,7 +112,7 @@ public class Lexer {
   }
   
   private func addToken(_ type: TokenType, lexeme: String, literal: Any?) {
-    tokens.append(Token( type, source[start..<position], literal, Location(position, line, column)))
+    tokens.append(Token( type, source[start..<position], literal, startLocation))
   }
   
   private func match(_ expected: String) -> Bool {
@@ -150,7 +155,7 @@ public class Lexer {
     while current() != ch && !isEOF { next() }
     
     if isEOF {
-      Rox.error(Location(position, line, column), "Unterminated string")
+      Rox.error(endLocation, "Unterminated string")
       return
     }
     

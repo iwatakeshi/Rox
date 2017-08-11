@@ -11,6 +11,7 @@ import Foundation
 extension String {
   
   /* subscripts */
+  // https://stackoverflow.com/a/38215613/1251031
   subscript(pos: Int) -> String {
     precondition(pos >= 0, "character position can't be negative")
     return self[pos...pos]
