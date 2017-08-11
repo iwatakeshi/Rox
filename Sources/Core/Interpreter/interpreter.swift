@@ -9,10 +9,11 @@
 import Foundation
 
 public class Interpreter : ExpressionVisitor {
+  public init() {}
   
   public func interpret(_ expression: Expression) {
     do {
-      let value = try evalutate(expression)
+      let value = try evaluate(expression)
         print(value)
     } catch RoxRuntimeException.error(let token, let message) {
         Rox.error(.RoxParserException(.error(token, message)))
@@ -22,8 +23,8 @@ public class Interpreter : ExpressionVisitor {
   }
   
   public func visit<T: Any>(visitor: Expression.Binary) throws -> T? {
-    let left = try evalutate(visitor.left)
-    let right = try evalutate(visitor.right)
+    let left = try evaluate(visitor.left)
+    let right = try evaluate(visitor.right)
     
     switch visitor.operator.type {
     case .Operator("+"):
@@ -41,16 +42,16 @@ public class Interpreter : ExpressionVisitor {
         return try evaluateNumber(visitor.operator, left, right) as? T
     case .Operator(">"):
       if (!isNumber(left) || !isNumber(right)) { break }
-      return ((left as! Double) > (right as! Double)) as? T
+      return (castNumber(left) > castNumber(right)) as? T
     case .Operator(">="):
       if (!isNumber(left) || !isNumber(right)) { break }
-      return ((left as! Double) >= (right as! Double)) as? T
+      return (castNumber(left) >= castNumber(right)) as? T
     case .Operator("<"):
       if (!isNumber(left) || !isNumber(right)) { break }
-      return ((left as! Double) < (right as! Double)) as? T
+      return (castNumber(left) < castNumber(right)) as? T
     case .Operator("<="):
       if (!isNumber(left) || !isNumber(right)) { break }
-      return ((left as! Double) <= (right as! Double)) as? T
+      return (castNumber(left) <= castNumber(right)) as? T
       
     default:
       return nil
@@ -63,14 +64,17 @@ public class Interpreter : ExpressionVisitor {
   }
   
   public func visit<T: Any>(visitor: Expression.Parenthesized) throws -> T? {
-    return try evalutate(visitor.expression) as? T
+    return try evaluate(visitor.expression) as? T
   }
   
   public func visit<T: Any>(visitor: Expression.Unary) throws -> T? {
-    let right = try evalutate(visitor.right)
+    let right = try evaluate(visitor.right)
     switch visitor.operator.type {
     case .Operator("-"):
-      return -(right as! Double) as? T
+      try checkNumberOperand(visitor.operator, operand: right)
+      if right is Double {
+        return (-(right as! Double)) as? T
+      } else { return (-(right as! Int)) as? T }
     case .Operator("!"):
       return !isTruthy(right) as? T
     default: break
@@ -78,7 +82,7 @@ public class Interpreter : ExpressionVisitor {
     return nil
   }
 
-  private func evalutate(_ expression: Expression) throws -> Any {
+  public func evaluate(_ expression: Expression) throws -> Any {
     return try expression.accept(visitor: self)
   }
   

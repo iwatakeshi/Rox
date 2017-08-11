@@ -10,8 +10,8 @@ import XCTest
 import Core
 
 class ParserTests: XCTestCase {
-  let lexer: Lexer = Lexer()
-  let printer: ASTPrinter = ASTPrinter()
+  let lexer = Lexer()
+  let printer = ASTPrinter()
   
   private func parse(_ source: String) -> String {
     do {
