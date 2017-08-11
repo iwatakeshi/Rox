@@ -19,8 +19,19 @@ public class Lexer {
     get { return position >= source.count || current() == Token.EOF }
   }
   
+  public init() { }
+  
   public init(_ source: String) {
-    self.source = source;
+    self.source = source
+  }
+  
+  public func scan(_ source: String) -> [Token] {
+    self.source = source
+    self.position = 0
+    self.line = 0
+    self.column = 1
+    self.tokens = [Token]()
+    return scan()
   }
   
   public func scan() -> [Token] {
@@ -28,9 +39,7 @@ public class Lexer {
       start = position
       scanToken()
     }
-    tokens.append(Token(type: .EOF, lexeme: "", literal: nil, location:
-      Location(position: position + 1, line: line, column: column + 1
-    )))
+    tokens.append(Token(.EOF, "", nil, Location(position + 1, line, column + 1)))
     return tokens
   }
   
@@ -43,7 +52,7 @@ public class Lexer {
       case ",": addToken(.Punctuation(",")); break
       case ".": addToken(.Punctuation(".")); break
       case ";": addToken(.Punctuation(";")); break
-      case "#": comment(); break
+      case "#": ScanComment(); break
       case "-": addToken(.Operator("-")); break
       case "+": addToken(.Operator("+")); break
       case "*": addToken(.Operator("*")); break
@@ -52,14 +61,14 @@ public class Lexer {
       case "=": addToken(match("=") ? .Operator("==") : .Operator("=")); break
       case "<": addToken(match("=") ? .Operator("<=") : .Operator("<")); break
       case ">": addToken(match("=") ? .Operator(">=") : .Operator(">")); break
-      case "\"": string(); break
+      case "\"": scanString(); break
       case " ": fallthrough
       case "\r": fallthrough
       case "\t": fallthrough
       case "\n": break
-      case _ where isDigit(previous()): number()
-      case _ where isAlpha(previous()): identifier()
-      default: print("[error]: Unrecongnized character \(previous())");
+      case _ where isDigit(previous()): ScanNumber()
+      case _ where isAlpha(previous()): scanIdentifier()
+      default: Rox.error(Location(position, line, column), "Unexpcted character '\(previous())'")
     }
   }
   
@@ -67,7 +76,8 @@ public class Lexer {
    return peek()
   }
 
-  @discardableResult private func next() -> String {
+  @discardableResult
+  private func next() -> String {
     if (current() == "\n") {
       line = line + 1
       column = 1
@@ -97,11 +107,7 @@ public class Lexer {
   }
   
   private func addToken(_ type: TokenType, lexeme: String, literal: Any?) {
-    tokens.append(Token(
-      type: type, lexeme: source[start..<position], literal: literal, location:
-      Location(
-        position: position, line: line, column: column
-      )))
+    tokens.append(Token( type, source[start..<position], literal, Location(position, line, column)))
   }
   
   private func match(_ expected: String) -> Bool {
@@ -130,7 +136,7 @@ public class Lexer {
   
   /* Scanners */
   
-  private func comment() {
+  private func ScanComment() {
     if previous() == "#" {
       while current() != "\n" && !isEOF { next() }
     }
@@ -139,12 +145,12 @@ public class Lexer {
     }
   }
   
-  private func string() {
+  private func scanString() {
     let ch = previous()
     while current() != ch && !isEOF { next() }
     
     if isEOF {
-      print("[error]: Unterminated string")
+      Rox.error(Location(position, line, column), "Unterminated string")
       return
     }
     
@@ -153,16 +159,17 @@ public class Lexer {
     addToken(.StringLiteral, literal: value)
   }
   
-  private func number() {
+  private func ScanNumber() {
     while isDigit(current()) { next() }
     if current() == "." && isDigit(peek(to: 1)) {
       next()
       while(isDigit(current())) { next () }
     }
-    addToken(.NumberLiteral, literal: Double(source[start..<position]))
+    let number = source[start..<position];
+    addToken(.NumberLiteral, literal: number.contains(".") ? Double(number) : Int(number))
   }
   
-  private func identifier() {
+  private func scanIdentifier() {
     while isAlphaNumeric(current()) { next() }
     
     let lexeme = source[start..<position]
