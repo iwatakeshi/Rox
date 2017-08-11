@@ -1,6 +1,6 @@
 import Foundation
 
-class Parser {
+public class Parser {
   private var tokens: [Token];
   private var position: Int = 0
   private var isEOF: Bool {

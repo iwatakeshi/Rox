@@ -7,7 +7,7 @@
 //
 
 import XCTest
-
+import Core
 class ParserTests: XCTestCase {
   let lexer: Lexer = Lexer()
   let printer: ASTPrinter = ASTPrinter()
