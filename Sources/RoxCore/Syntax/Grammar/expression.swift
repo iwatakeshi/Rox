@@ -1,9 +1,12 @@
 import Foundation
 
+/**
+ A class that represents expressions and can be evaluated
+ */
 public class Expression {
   public init() {}
   
-  public func accept<T>(visitor: ExpressionVisitor) throws -> T {
+  public func accept(visitor: ExpressionVisitor) throws -> Any? {
     fatalError()
   }
   
@@ -18,8 +21,8 @@ public class Expression {
       self.right = right
     }
     
-    public override func accept<T>(visitor: ExpressionVisitor) throws -> T {
-      return try visitor.visit(visitor: self)!
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)!
     }
   }
   
@@ -29,8 +32,8 @@ public class Expression {
       self.expression = expression
     }
     
-    public override func accept<T>(visitor: ExpressionVisitor) throws -> T {
-      return try visitor.visit(visitor: self)!
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)!
     }
   }
   
@@ -40,8 +43,8 @@ public class Expression {
       self.value = value == nil ? "null" : value!
     }
     
-    public override func accept<T>(visitor: ExpressionVisitor) throws -> T {
-      return try visitor.visit(visitor: self)!
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)!
     }
     
   }
@@ -54,8 +57,8 @@ public class Expression {
       self.right = right
     }
     
-    public override func accept<T>(visitor: ExpressionVisitor) throws -> T {
-      return try visitor.visit(visitor: self)!
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)!
     }
   }
   

@@ -7,7 +7,7 @@
 //
 
 import XCTest
-import Core
+import RoxCore
 
 class ParserTests: XCTestCase {
   let lexer = Lexer()

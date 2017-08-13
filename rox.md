@@ -14,15 +14,21 @@
 ## Grammar
 
 ```
-expression     → equality ;
-equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-comparison     → addition ( ( ">" | ">=" | "<" | "<=" ) addition )* ;
-addition       → multiplication ( ( "-" | "+" ) multiplication )* ;
-multiplication → unary ( ( "/" | "*" ) unary )* ;
-unary          → ( "!" | "-" ) unary ;
-               | primary ;
-primary        → NUMBER | STRING | "false" | "true" | "nil"
-               | "(" expression ")" ;
+program                   → statement* EOF ;
+
+statement                 → expression-statement
+                          | print-statement ;
+expresion-statement       → expression (";") ;
+print-statement           → "print" expression ";" ;
+expression                → equality ;
+equality                  → comparison ( ( "!=" | "==" ) comparison )* ;
+comparison                → addition ( ( ">" | ">=" | "<" | "<=" ) addition )* ;
+addition                  → multiplication ( ( "-" | "+" ) multiplication )* ;
+multiplication            → unary ( ( "/" | "*" ) unary )* ;
+unary                     → ( "!" | "-" ) unary ;
+                          | primary ;
+primary                   → NUMBER | STRING | "false" | "true" | "nil"
+                          | "(" expression ")" ;
 ```
 
 ## Types

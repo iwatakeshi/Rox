@@ -1,22 +1,50 @@
 import Foundation
 
+/**
+ A class responsible of parsing a sequence of tokens and
+ determining whether the sequence is in the grammar.
+ */
 public class Parser {
   private var tokens: [Token];
   private var position: Int = 0
   private var isEOF: Bool {
     get { return tokens[position].type == .EOF }
   }
-
+  
+  public init() {
+    self.tokens = [Token]()
+  }
+  
   public init(_ tokens: [Token]) {
     self.tokens = tokens
   }
   
-  public func parse() -> Expression? {
-    do {
-      return try parseExpression()
-    } catch {
-      return nil
+  /**
+   Parses the tokens and generates a parse tree
+   
+   - Returns: The parse tree
+   */
+  public func parse() -> [Statement] {
+    var statements = [Statement]()
+    while !isEOF {
+      do {
+        statements.append(try parseStatement())
+      } catch {
+        
+      }
     }
+    return statements
+  }
+  
+  /**
+   Parses the given tokens and generates a parse tree
+   
+   - Returns: The parse tree
+   */
+  public func parse(_ tokens: [Token]) -> [Statement] {
+    self.tokens = tokens
+    self.position = 0
+    return parse()
   }
 
   /* Expressions */
@@ -93,6 +121,29 @@ public class Parser {
     throw error(previous(), "Expect expression.")
   }
 
+  /* Statements */
+  
+  private func parseStatement() throws -> Statement {
+    if match(.Reserved("print")) { return try parsePrintStatement() }
+    return try parseExpressionStatement()
+  }
+  
+  private func parseExpressionStatement() throws -> Statement {
+    let value = try parseExpression()
+    _ = try consume(.Punctuation(";"), "Expect ';' after expression", false)
+    return Statement.Expression(value)
+  }
+  
+  private func parsePrintStatement() throws -> Statement {
+    let value = try parseExpression()
+    _ = try consume(.Punctuation(";"), "Expect ';' after expression", false)
+    return Statement.Print(value)
+  }
+  
+  
+  
+  
+  
   /* Helper methods */
 
   private func match(_ types: TokenType...) -> Bool {
@@ -125,7 +176,8 @@ public class Parser {
   }
 
   @discardableResult
-  private func consume(_ type: TokenType, _ message: String) throws -> Token {
+  private func consume(_ type: TokenType, _ message: String, _ required: Bool = true) throws -> Token {
+    if !required { return current() }
     if check(type) { return next() }
     throw error(current(), message)
   }

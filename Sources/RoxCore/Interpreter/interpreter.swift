@@ -8,6 +8,9 @@
 
 import Foundation
 
+/**
+ A class responsible of evaluating a given parse tree.
+ */
 public class Interpreter : ExpressionVisitor {
   public init() {}
   
@@ -22,24 +25,24 @@ public class Interpreter : ExpressionVisitor {
     }
   }
   
-  public func visit<T: Any>(visitor: Expression.Binary) throws -> T? {
-    let left = try evaluate(visitor.left)
-    let right = try evaluate(visitor.right)
+  public func visit<T: Any>(expression: Expression.Binary) throws -> T? {
+    let left = try evaluate(expression.left)
+    let right = try evaluate(expression.right)
     
-    switch visitor.operator.type {
+    switch expression.operator.type {
     case .Operator("+"):
       if left is String && right is String {
         return (left as! String) + (right as! String) as? T
       }
       if isNumber(left) && isNumber(right) {
-        return try evaluateNumber(visitor.operator, left, right) as? T
+        return try evaluateNumber(expression.operator, left, right) as? T
       }
       break
     case .Operator("-"): fallthrough
     case .Operator("/"): fallthrough
     case .Operator("*"):
       if (!isNumber(left) || !isNumber(right)) { break }
-        return try evaluateNumber(visitor.operator, left, right) as? T
+        return try evaluateNumber(expression.operator, left, right) as? T
     case .Operator(">"):
       if (!isNumber(left) || !isNumber(right)) { break }
       return (castNumber(left) > castNumber(right)) as? T
@@ -56,22 +59,22 @@ public class Interpreter : ExpressionVisitor {
     default:
       return nil
     }
-    throw RoxRuntimeException.error(visitor.operator, "Operands must be two numbers or two strings.")
+    throw RoxRuntimeException.error(expression.operator, "Operands must be two numbers or two strings.")
   }
   
-  public func visit<T: Any>(visitor: Expression.Literal) throws -> T? {
-    return visitor.value as? T
+  public func visit<T: Any>(expression: Expression.Literal) throws -> T? {
+    return expression.value as? T
   }
   
-  public func visit<T: Any>(visitor: Expression.Parenthesized) throws -> T? {
-    return try evaluate(visitor.expression) as? T
+  public func visit<T: Any>(expression: Expression.Parenthesized) throws -> T? {
+    return try evaluate(expression.expression) as? T
   }
   
-  public func visit<T: Any>(visitor: Expression.Unary) throws -> T? {
-    let right = try evaluate(visitor.right)
-    switch visitor.operator.type {
+  public func visit<T: Any>(expression: Expression.Unary) throws -> T? {
+    let right = try evaluate(expression.right)
+    switch expression.operator.type {
     case .Operator("-"):
-      try checkNumberOperand(visitor.operator, operand: right)
+      try checkNumberOperand(expression.operator, operand: right)
       if right is Double {
         return (-(right as! Double)) as? T
       } else { return (-(right as! Int)) as? T }
@@ -83,7 +86,7 @@ public class Interpreter : ExpressionVisitor {
   }
 
   public func evaluate(_ expression: Expression) throws -> Any {
-    return try expression.accept(visitor: self)
+    return try expression.accept(visitor: self)!
   }
   
   private func isTruthy(_ value: Any?) -> Bool {
