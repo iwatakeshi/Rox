@@ -11,12 +11,12 @@ import RoxCore
 
 class InterpreterTests: XCTestCase {
     let lexer = Lexer()
+    let parser = Parser()
     let interpreter = Interpreter()
   
   private func evaluate(_ source: String) -> Any? {
     do {
-      let expression = Parser(lexer.scan(source)).parse();
-      if expression == nil { return nil }
+      let expression = parser.parse(lexer.scan(source), type: .Expression) as? Expression;
       return try interpreter.evaluate(expression!)
     } catch {
       return nil

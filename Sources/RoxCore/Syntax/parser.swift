@@ -11,12 +11,32 @@ public class Parser {
     get { return tokens[position].type == .EOF }
   }
   
+  public enum ParseType {
+    case Expression
+    case Statement
+  }
+  
   public init() {
     self.tokens = [Token]()
   }
   
   public init(_ tokens: [Token]) {
     self.tokens = tokens
+  }
+  
+  
+  public func parse(_ tokens: [Token], type: ParseType) -> Any? {
+    self.tokens = tokens
+    self.position = 0
+    switch type {
+    case .Expression:
+      do {
+        return try parseExpression()
+      } catch {
+        return nil
+      }
+    default: return parse()
+    }
   }
   
   /**
