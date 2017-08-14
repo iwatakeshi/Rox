@@ -8,7 +8,7 @@
 
 import Foundation
 
-/// A structure representing the source code's location.
+/// A structure representing the source code's location
 public struct Location {
   /// Source position
   private(set) var position: Int = 0

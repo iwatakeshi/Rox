@@ -1,92 +1,28 @@
 import Foundation
 
-/**
- A class responsible of parsing a sequence of tokens and
- determining whether the sequence is in the grammar.
- */
 public class Parser {
   private var tokens: [Token];
   private var position: Int = 0
   private var isEOF: Bool {
     get { return tokens[position].type == .EOF }
   }
-  
-  public enum ParseType {
-    case Expression
-    case Statement
-  }
-  
-  public init() {
-    self.tokens = [Token]()
-  }
-  
+
   public init(_ tokens: [Token]) {
     self.tokens = tokens
   }
   
-  
-  public func parse(_ tokens: [Token], type: ParseType) -> Any? {
-    self.tokens = tokens
-    self.position = 0
-    switch type {
-    case .Expression:
-      do {
-        return try parseExpression()
-      } catch {
-        return nil
-      }
-    default: return parse()
+  public func parse() -> Expression? {
+    do {
+      return try parseExpression()
+    } catch {
+      return nil
     }
-  }
-  
-  /**
-   Parses the tokens and generates a parse tree
-   
-   - Returns: The parse tree
-   */
-  public func parse() -> [Statement] {
-    var statements = [Statement]()
-    while !isEOF {
-      do {
-        statements.append(try parseDeclarationStatement())
-      } catch {
-//        break;
-      }
-    }
-    return statements
-  }
-  
-  /**
-   Parses the given tokens and generates a parse tree
-   
-   - Returns: The parse tree
-   */
-  public func parse(_ tokens: [Token]) -> [Statement] {
-    self.tokens = tokens
-    self.position = 0
-    return parse()
   }
 
   /* Expressions */
 
   private func parseExpression() throws -> Expression {
-    return try parseAssignment()
-  }
-
-  private func parseAssignment() throws -> Expression {
-    let expression = try parseEquality()
-
-    if match(.Operator("=")) {
-      let equals = previous()
-      let value = try parseAssignment()
-      
-      if expression is Expression.Variable {
-        let name = (expression as! Expression.Variable).name
-        return Expression.Assignment(name, value)
-      }
-      throw error(equals, "Invalid assignment target")
-    }
-    return expression
+    return try parseEquality()
   }
 
   private func parseEquality() throws -> Expression {
@@ -147,76 +83,16 @@ public class Parser {
     if match(.NumberLiteral, .StringLiteral) {
       return Expression.Literal(previous().literal)
     }
-    
-    if match(.Identifier) { return Expression.Variable(previous()) }
-    
+
     if match(.Punctuation("(")) {
       let expression = try parseExpression()
       try consume(.Punctuation(")"), "Expect ')' after expression")
       return Expression.Parenthesized(expression)
     }
 
-    throw error(previous(), "Expect expression")
+    throw error(previous(), "Expect expression.")
   }
 
-  /* Statements */
-  
-  private func parseStatement() throws -> Statement {
-    do {
-      if match(.Reserved("print")) { return try parsePrintStatement() }
-      if match(.Punctuation("{")) { return try Statement.Block(parseBlockStatement()) }
-      return try parseExpressionStatement()
-    } catch RoxException.RoxParserException(.error(_, _)) {
-
-    }
-    return try parseExpressionStatement()
-  }
-  
-  private func parseBlockStatement() throws -> [Statement] {
-    var statements = [Statement]()
-    while !check(.Punctuation("}")) && !isEOF {
-      statements.append(try parseDeclarationStatement())
-    }
-    try consume(.Punctuation("}"), "Expect '}' after block")
-    return statements
-  }
-  
-  private func parseExpressionStatement() throws -> Statement {
-    let value = try parseExpression()
-    _ = try consume(.Punctuation(";"), "Expect ';' after expression", false)
-    return Statement.Expression(value)
-  }
-  
-  private func parsePrintStatement() throws -> Statement {
-    let value = try parseExpression()
-    _ = try consume(.Punctuation(";"), "Expect ';' after expression", false)
-    return Statement.Print(value)
-  }
-  
-  private func parseDeclarationStatement() throws -> Statement {
-    do {
-      if match(.Reserved("var")) { return try parseVariableStatement() }
-    } catch RoxException.RoxParserException(.error(_, _)) {
-      synchronize()
-    }
-    return try parseStatement()
-  }
-  
-  public func parseVariableStatement() throws -> Statement {
-    let name = try consume(.Identifier, "Expect identifier after 'var' declaration")
-    
-    var value: Expression?
-    
-    if match(.Operator("=")) {
-      value = try parseExpression()
-    }
-    try consume(.Punctuation(";"), "Expect ';' after variable declaration", false)
-    return Statement.Variable(name, value)
-  }
-  
-  
-  
-  
   /* Helper methods */
 
   private func match(_ types: TokenType...) -> Bool {
@@ -249,8 +125,7 @@ public class Parser {
   }
 
   @discardableResult
-  private func consume(_ type: TokenType, _ message: String, _ required: Bool = true) throws -> Token {
-    if !required { return current() }
+  private func consume(_ type: TokenType, _ message: String) throws -> Token {
     if check(type) { return next() }
     throw error(current(), message)
   }

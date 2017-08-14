@@ -8,10 +8,6 @@
 
 import Foundation
 
-/**
- A class responsible of generating a sequence of 
- tokens from a given source input.
- */
 public class Lexer {
   private(set) var tokens = [Token]()
   private(set) var source = "";
