@@ -48,7 +48,7 @@ public class Parser {
     var statements = [Statement]()
     while !isEOF {
       do {
-        statements.append(try parseStatement())
+        statements.append(try parseDeclarationStatement())
       } catch {
 //        break;
       }
@@ -70,7 +70,23 @@ public class Parser {
   /* Expressions */
 
   private func parseExpression() throws -> Expression {
-    return try parseEquality()
+    return try parseAssignment()
+  }
+
+  private func parseAssignment() throws -> Expression {
+    let expression = try parseEquality()
+
+    if match(.Operator("=")) {
+      let equals = previous()
+      let value = try parseAssignment()
+      
+      if expression is Expression.Variable {
+        let name = (expression as! Expression.Variable).name
+        return Expression.Assignment(name, value)
+      }
+      throw error(equals, "Invalid assignment target")
+    }
+    return expression
   }
 
   private func parseEquality() throws -> Expression {
@@ -148,10 +164,21 @@ public class Parser {
   private func parseStatement() throws -> Statement {
     do {
       if match(.Reserved("print")) { return try parsePrintStatement() }
+      if match(.Punctuation("{")) { return try Statement.Block(parseBlockStatement()) }
       return try parseExpressionStatement()
     } catch RoxException.RoxParserException(.error(_, _)) {
-      return nil
+
     }
+    return try parseExpressionStatement()
+  }
+  
+  private func parseBlockStatement() throws -> [Statement] {
+    var statements = [Statement]()
+    while !check(.Punctuation("}")) && !isEOF {
+      statements.append(try parseDeclarationStatement())
+    }
+    try consume(.Punctuation("}"), "Expect '}' after block")
+    return statements
   }
   
   private func parseExpressionStatement() throws -> Statement {
@@ -168,19 +195,20 @@ public class Parser {
   
   private func parseDeclarationStatement() throws -> Statement {
     do {
-      if match(.Reserved("var")) { return parseVariableStatement() }
+      if match(.Reserved("var")) { return try parseVariableStatement() }
     } catch RoxException.RoxParserException(.error(_, _)) {
       synchronize()
     }
+    return try parseStatement()
   }
   
-  public func parseVariableDeclaration() throws -> Statement {
+  public func parseVariableStatement() throws -> Statement {
     let name = try consume(.Identifier, "Expect identifier after 'var' declaration")
     
     var value: Expression?
     
-    if match(.Punctuation("=")) {
-      value = parseExpression()
+    if match(.Operator("=")) {
+      value = try parseExpression()
     }
     try consume(.Punctuation(";"), "Expect ';' after variable declaration", false)
     return Statement.Variable(name, value)

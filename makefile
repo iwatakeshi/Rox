@@ -1,7 +1,7 @@
 all: build
 
 # generate a new xcode project
-generate:
+project:
 	swift package generate-xcodeproj
 
 # build the project

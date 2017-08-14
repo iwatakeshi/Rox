@@ -13,6 +13,8 @@ import Foundation
  */
 public class Interpreter : ExpressionVisitor, StatementVisitor {
 
+  private(set) var environment = Environment()
+
   public init() {}
   
   public func interpret(_ statements: [Statement]) {
@@ -29,6 +31,12 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   
   /* Expressions */
   
+  public func visit(expression: Expression.Assignment) throws -> Any? {
+    let value = try evaluate(expression.value)
+    try environment.assign(expression.name, value)
+    return value
+  }
+
   public func visit(expression: Expression.Binary) throws -> Any? {
     let left = try evaluate(expression.left)
     let right = try evaluate(expression.right)
@@ -88,6 +96,10 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     }
     return nil
   }
+
+  public func visit(expression: Expression.Variable) throws -> Any? {
+    return try environment.get(expression.name)
+  }
   
   @discardableResult
   public func evaluate(_ expression: Expression) throws -> Any {
@@ -95,6 +107,10 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   }
   
   /* Statements */
+  
+  public func visit(statement: Statement.Block) throws {
+    try execute(statement, Environment(environment))
+  }
   
   public func visit(statement: Statement.Expression) throws {
     try evaluate(statement.expression);
@@ -104,9 +120,29 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     let value = try evaluate(statement.expression)
     print(value)
   }
+
+  public func visit(statement: Statement.Variable) throws {
+    var value: Expression?
+    if statement.value != nil {
+      value = try evaluate(statement.value!) as? Expression
+    }
+    environment.define(statement.name.lexeme, value)
+  }
   
   public func execute(_ statement: Statement) throws {
     try statement.accept(visitor: self)
+  }
+  
+  public func execute(_ block: Statement.Block, _ environment: Environment) throws {
+    let previous = self.environment
+    do  {
+      self.environment = environment
+      for statement in block.statements {
+        try execute(statement)
+      }
+    } catch {
+      self.environment = previous
+    }
   }
   
   /* Helpers */

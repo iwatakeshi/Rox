@@ -9,25 +9,34 @@
 import Foundation
 
 public class ASTPrinter: ExpressionVisitor {
+  public func visit(expression: Expression.Variable) throws -> Any? {
+    return expression.name.lexeme
+  }
+
+  
   public init() {}
   
-  public func visit<T: Any>(expression: Expression.Binary) throws -> T {
-    return try parenthesize(expression.operator.lexeme, expressions: expression.left, expression.right) as! T
+  public func visit(expression: Expression.Assignment) throws -> Any? {
+    return try parenthesize("=", expression, expression.value)
   }
   
-  public func visit<T: Any>(expression: Expression.Literal) throws -> T {
-    return String(describing: expression.value) as! T
+  public func visit(expression: Expression.Binary) throws -> Any? {
+    return try parenthesize(expression.operator.lexeme, expression.left, expression.right)
   }
   
-  public func visit<T: Any>(expression: Expression.Parenthesized) throws -> T {
-    return try parenthesize("group", expressions: expression.expression) as! T
+  public func visit(expression: Expression.Literal) throws -> Any? {
+    return String(describing: expression.value) 
   }
   
-  public func visit<T: Any>(expression: Expression.Unary) throws -> T {
-    return try parenthesize(expression.operator.lexeme, expressions: expression.right) as! T
+  public func visit(expression: Expression.Parenthesized) throws -> Any? {
+    return try parenthesize("group", expression.expression)
   }
   
-  private func parenthesize(_ name: String, expressions: Expression...) throws -> String {
+  public func visit(expression: Expression.Unary) throws -> Any? {
+    return try parenthesize(expression.operator.lexeme, expression.right)
+  }
+  
+  private func parenthesize(_ name: String, _ expressions: Expression...) throws -> String {
     var str = "(" + name
     for expression in expressions {
       str.append(" ")

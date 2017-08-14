@@ -15,13 +15,13 @@ class InterpreterTests: XCTestCase {
     let interpreter = Interpreter()
   
   private func evaluate(_ source: String) -> Any? {
-      do {
-        let expression = parser.parse(lexer.scan(source), type: .Expression) as? Expression;
-        return try interpreter.evaluate(expression!)
-      } catch {
-        return nil
-      }
+    do {
+      let expression = parser.parse(lexer.scan(source), type: .Expression) as? Expression;
+      return try interpreter.evaluate(expression!)
+    } catch {
+      return nil
     }
+  }
   func testBinary() {
     // Numbers
     XCTAssertEqual(evaluate("1 + 1") as! Int, 2)

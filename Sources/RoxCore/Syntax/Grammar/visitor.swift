@@ -9,6 +9,7 @@
 import Foundation
 
 public protocol ExpressionVisitor {
+  func visit(expression: Expression.Assignment) throws -> Any?
   func visit(expression: Expression.Binary) throws -> Any?
   func visit(expression: Expression.Literal) throws -> Any?
   func visit(expression: Expression.Parenthesized) throws -> Any?
@@ -17,6 +18,7 @@ public protocol ExpressionVisitor {
 }
 
 public protocol StatementVisitor {
+  func visit(statement: Statement.Block) throws
   func visit(statement: Statement.Expression) throws
   func visit(statement: Statement.Print) throws
   func visit(statement: Statement.Variable) throws

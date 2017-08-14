@@ -9,7 +9,17 @@ public class Expression {
   public func accept(visitor: ExpressionVisitor) throws -> Any? {
     fatalError()
   }
-  
+  public class Assignment: Expression {
+    private(set) var name: Token
+    private(set) var value: Expression
+    public init(_ name: Token, _ value: Expression) {
+      self.name = name
+      self.value = value
+    }
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)
+    }
+  }
   public class Binary: Expression {
     private(set) var left: Expression
     private(set) var right: Expression
@@ -66,6 +76,9 @@ public class Expression {
     private(set) var name: Token
     public init(_ name: Token) {
       self.name = name
+    }
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)!
     }
   }
   

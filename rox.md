@@ -24,7 +24,9 @@ statement                 → expression-statement
                           | print-statement ;
 expresion-statement       → expression (";")? ;
 print-statement           → "print" expression (";")? ;
-expression                → equality ;
+expression                → assignment
+assignment                → identifier "=" assignment
+                          | equality ;
 equality                  → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison                → addition ( ( ">" | ">=" | "<" | "<=" ) addition )* ;
 addition                  → multiplication ( ( "-" | "+" ) multiplication )* ;
