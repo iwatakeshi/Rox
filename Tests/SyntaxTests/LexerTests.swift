@@ -7,7 +7,7 @@
 //
 
 import XCTest
-import RoxCore
+import Core
 
 class LexerTests: XCTestCase {
   

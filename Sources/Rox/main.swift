@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import RoxCore
+import Core
 
 private func read(path: String) -> URL {
   return URL(fileURLWithPath: path)
