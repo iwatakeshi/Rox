@@ -43,9 +43,18 @@ public class Rox {
   public static func run(_ source: String) throws {
     let scanner = Lexer(source)
     let parser = Parser(scanner.scan())
-    let statements = parser.parse()
+    let syntax = parser.parseRepl()
     if errored { return }
-    interpreter.interpret(statements)
+    
+    if syntax is [Statement] {
+      interpreter.interpret(syntax as! [Statement])
+    } else if syntax is Expression {
+      let result = interpreter.interpret(syntax as! Expression)
+      if (result != nil) {
+        print((result as Any?)!)
+      }
+      
+    }
     
   }
   

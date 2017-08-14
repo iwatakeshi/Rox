@@ -7,6 +7,8 @@ import Foundation
 public class Parser {
   private var tokens: [Token];
   private var position: Int = 0
+  private var allowExpression = false
+  private var foundExpression = false
   private var isEOF: Bool {
     get { return tokens[position].type == .EOF }
   }
@@ -50,12 +52,28 @@ public class Parser {
       do {
         statements.append(try parseDeclarationStatement())
       } catch {
-//        break;
       }
     }
     return statements
   }
   
+public func parseRepl() -> Any? {
+  var statements = [Statement]()
+    allowExpression = true
+    while !isEOF {
+      do {
+        statements.append(try parseDeclarationStatement())
+        if foundExpression {
+          let last = statements[statements.count - 1]
+          return (last as! Statement.Expression).expression
+        }
+      } catch {
+      }
+      allowExpression = false
+    }
+    return statements
+}
+
   /**
    Parses the given tokens and generates a parse tree
    
@@ -183,13 +201,17 @@ public class Parser {
   
   private func parseExpressionStatement() throws -> Statement {
     let value = try parseExpression()
-    _ = try consume(.Punctuation(";"), "Expect ';' after expression", false)
+    if allowExpression && isEOF {
+      foundExpression = true
+    } else {
+      try consume(.Punctuation(";"), "Expect ';' after expression", false)
+    }
     return Statement.Expression(value)
   }
   
   private func parsePrintStatement() throws -> Statement {
     let value = try parseExpression()
-    _ = try consume(.Punctuation(";"), "Expect ';' after expression", false)
+    try consume(.Punctuation(";"), "Expect ';' after expression", false)
     return Statement.Print(value)
   }
   
