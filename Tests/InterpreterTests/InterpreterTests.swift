@@ -7,40 +7,40 @@
 //
 
 import XCTest
-import Core
+import RoxCore
 
 class InterpreterTests: XCTestCase {
     let lexer = Lexer()
+    let parser = Parser()
     let interpreter = Interpreter()
   
   private func evaluate(_ source: String) -> Any? {
     do {
-      let expression = Parser(lexer.scan(source)).parse();
-      if expression == nil { return nil }
+      let expression = parser.parse(lexer.scan(source), type: .Expression) as? Expression;
       return try interpreter.evaluate(expression!)
     } catch {
       return nil
     }
   }
-    func testBinary() {
-      // Numbers
-      XCTAssertEqual(evaluate("1 + 1") as! Int, 2)
-      XCTAssertEqual(evaluate("1 + 1.5") as! Double, 2.5)
-      XCTAssertEqual(evaluate("1 - 1") as! Int, 0)
-      XCTAssertEqual(evaluate("2.5 - 1") as! Double, 1.5)
-      XCTAssertEqual(evaluate("1 * 1") as! Int, 1)
-      XCTAssertEqual(evaluate("1.5 * 2") as! Double, 3.0)
-      XCTAssertEqual(evaluate("1.5 / 1") as! Double, 1.5)
-      XCTAssertNil(evaluate("1 / 0"))
-      XCTAssertNil(evaluate("1.5 / 0"))
+  func testBinary() {
+    // Numbers
+    XCTAssertEqual(evaluate("1 + 1") as! Int, 2)
+    XCTAssertEqual(evaluate("1 + 1.5") as! Double, 2.5)
+    XCTAssertEqual(evaluate("1 - 1") as! Int, 0)
+    XCTAssertEqual(evaluate("2.5 - 1") as! Double, 1.5)
+    XCTAssertEqual(evaluate("1 * 1") as! Int, 1)
+    XCTAssertEqual(evaluate("1.5 * 2") as! Double, 3.0)
+    XCTAssertEqual(evaluate("1.5 / 1") as! Double, 1.5)
+    XCTAssertNil(evaluate("1 / 0"))
+    XCTAssertNil(evaluate("1.5 / 0"))
+    
+    // Strings
+    XCTAssertEqual(evaluate("\"Hello\" + \" world!\"") as! String, "Hello world!")
+    XCTAssertNil(evaluate("\"Hello\" - \" world!\""))
+    XCTAssertNil(evaluate("\"Hello\" * \" world!\""))
+    XCTAssertNil(evaluate("\"Hello\" / \" world!\""))
       
-      // Strings
-      XCTAssertEqual(evaluate("\"Hello\" + \" world!\"") as! String, "Hello world!")
-      XCTAssertNil(evaluate("\"Hello\" - \" world!\""))
-      XCTAssertNil(evaluate("\"Hello\" * \" world!\""))
-      XCTAssertNil(evaluate("\"Hello\" / \" world!\""))
-      
-    }
+  }
   
   func testParenthesized() {
     XCTAssertEqual(evaluate("(1 + (1))") as! Int, 2)

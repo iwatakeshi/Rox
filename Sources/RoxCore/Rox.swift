@@ -43,9 +43,9 @@ public class Rox {
   public static func run(_ source: String) throws {
     let scanner = Lexer(source)
     let parser = Parser(scanner.scan())
-    let expression = parser.parse()
+    let statements = parser.parse()
     if errored { return }
-    interpreter.interpret(expression!)
+    interpreter.interpret(statements)
     
   }
   
