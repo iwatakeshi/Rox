@@ -204,7 +204,6 @@ public class Parser {
   
   public func parseVariableStatement() throws -> Statement {
     let name = try consume(.Identifier, "Expect identifier after 'var' declaration")
-    
     var value: Expression?
     
     if match(.Operator("=")) {
