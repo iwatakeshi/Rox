@@ -96,7 +96,7 @@ public func parseRepl() -> Any? {
   }
 
   private func parseAssignmentExpression() throws -> Expression {
-    let expression = try parseEqualityExpression()
+    let expression = try parseOrExpression()
 
     if match(.Operator("=")) {
       let equals = previous()
@@ -110,17 +110,47 @@ public func parseRepl() -> Any? {
     }
     return expression
   }
-
+  
+  private func parseOrExpression() throws -> Expression {
+    var expression = try parseAndExpression()
+    while match(.Operator("or")) {
+      let `operator` = previous()
+      let right = try parseAndExpression()
+      expression = Expression.Logical(expression, `operator`, right)
+    }
+    return expression
+  }
+  
+  private func parseAndExpression() throws -> Expression {
+    var expression = try parseEqualityExpression()
+    while match(.Operator("and")) {
+      let `operator` = previous()
+      let right = try parseEqualityExpression()
+      expression = Expression.Logical(expression, `operator`, right)
+    }
+    return expression
+  }
+  
   private func parseEqualityExpression() throws -> Expression {
-    var expression = try parseComparisonExpression()
+    var expression = try parseRangeExpression()
     while match(.Operator("!="), .Operator("==")) {
       let `operator` = previous()
-      let right = try parseComparisonExpression()
+      let right = try parseRangeExpression()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
   }
-
+  
+  private func parseRangeExpression() throws -> Expression {
+    let expression = try parseAdditionExpression()
+    if match(.Operator("..")) {
+      let `operator` = previous()
+      let right = try parseAdditionExpression()
+      return Expression.Range(expression, `operator`, right)
+    }
+    return expression
+  }
+  
   private func parseComparisonExpression() throws -> Expression {
     var expression = try parseAdditionExpression()
     while match(.Operator(">"), .Operator(">="), .Operator("<"), .Operator("<=")) {
@@ -185,8 +215,11 @@ public func parseRepl() -> Any? {
   
   private func parseStatement() throws -> Statement {
     do {
-      if match(.Reserved("print")) { return try parsePrintStatement() }
       if match(.Punctuation("{")) { return try Statement.Block(parseBlockStatement()) }
+      if match(.Reserved("for")) { return try parseForStatement() }
+      if match(.Reserved("if")) { return try parseIfStatement() }
+      if match(.Reserved("print")) { return try parsePrintStatement() }
+      if match(.Reserved("while")) { return try parseWhileStatement() }
       return try parseExpressionStatement()
     } catch RoxException.RoxParserException(.error(_, _)) {
 
@@ -210,6 +243,34 @@ public func parseRepl() -> Any? {
     }
     try consume(.Punctuation(";"), "Expect ';' after expression", false)
     return Statement.Expression(value)
+  }
+  
+  private func parseForStatement() throws -> Statement {
+    var name: Token?
+    var index: Token?
+    if match(.Punctuation("(")) {
+      name = try consume(.Identifier, "Expect identifier after '('")
+      if match(.Punctuation(",")) { index = try consume(.Identifier, "Expect indentifier after ','") }
+      try consume(.Punctuation(")"), "Expect ')' after identifier");
+    } else { name = try consume(.Identifier, "Expect identifier after 'for'") }
+    
+    try consume(.Operator("in"), "Expect 'in' after \(index == nil ? "identifier" : "')'")")
+    let expression = try parseExpression()
+    
+    return Statement.For(name, index, expression, try parseStatement())
+  }
+  
+  private func parseIfStatement() throws -> Statement {
+    try consume(.Punctuation("("), "Expect '(' after 'if'", false)
+    let condition = try parseExpression()
+    try consume(.Punctuation(")"), "Expect ')' after condition", false)
+    let then = try parseStatement()
+    var `else`: Statement?
+    if match(.Reserved("else")) {
+      `else` = try parseStatement()
+    }
+    
+    return Statement.If(condition, then, `else`)
   }
   
   private func parsePrintStatement() throws -> Statement {
@@ -238,7 +299,12 @@ public func parseRepl() -> Any? {
     return Statement.Variable(name, value)
   }
   
-  
+  public func parseWhileStatement() throws -> Statement {
+    try consume(.Punctuation("("), "Expect '(' after 'while'", false)
+    let condition = try parseExpression()
+    try consume(.Punctuation(")"), "Expect ')' after condition", false)
+    return Statement.While(condition, try parseStatement())
+  }
   
   
   /* Helper methods */

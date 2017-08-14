@@ -11,7 +11,7 @@ import Foundation
 public class Statement {
   
   public func accept(visitor: StatementVisitor) throws {
-    fatalError()
+    preconditionFailure("The method or operation is not implemented.")
   }
   
   public class Block: Statement {
@@ -29,6 +29,36 @@ public class Statement {
     private(set) var expression: RoxCore.Expression
     public init(_ expression: RoxCore.Expression) {
         self.expression = expression
+    }
+    public override func accept(visitor: StatementVisitor) throws {
+      try visitor.visit(statement: self)
+    }
+  }
+  
+  public class For: Statement {
+    private(set) var name: Token?
+    private(set) var index: Token?
+    private(set) var expression: RoxCore.Expression
+    private(set) var body: Statement
+    public init(_ name: Token?, _ index: Token?, _ expression: RoxCore.Expression, _ body: Statement) {
+      self.name = name
+      self.index = index
+      self.expression = expression
+      self.body = body
+    }
+    public override func accept(visitor: StatementVisitor) throws {
+      try visitor.visit(statement: self)
+    }
+  }
+
+  public class If: Statement {
+    private(set) var condition: RoxCore.Expression
+    private(set) var then: Statement
+    private(set) var `else`: Statement?
+    public init(_ condition: RoxCore.Expression, _ then: Statement, _ `else`: Statement?) {
+      self.condition = condition
+      self.then = then
+      self.else = `else`
     }
     public override func accept(visitor: StatementVisitor) throws {
       try visitor.visit(statement: self)
@@ -53,6 +83,18 @@ public class Statement {
       self.value = value
     }
     
+    public override func accept(visitor: StatementVisitor) throws {
+      try visitor.visit(statement: self)
+    }
+  }
+  
+  public class While: Statement {
+    private(set) var condition: RoxCore.Expression
+    private(set) var body: Statement
+    public init(_ condition: RoxCore.Expression, _ body: Statement) {
+      self.condition = condition
+      self.body = body
+    }
     public override func accept(visitor: StatementVisitor) throws {
       try visitor.visit(statement: self)
     }

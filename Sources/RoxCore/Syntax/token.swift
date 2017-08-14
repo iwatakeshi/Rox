@@ -75,6 +75,7 @@ public struct Token {
     case "for": fallthrough
     case "func": fallthrough
     case "if": fallthrough
+    case "in": fallthrough
     case "null": fallthrough
     case "or": fallthrough
     case "print": fallthrough
@@ -92,6 +93,7 @@ public struct Token {
     switch lexeme {
     case "and": fallthrough
     case "or": fallthrough
+    case "in": fallthrough
     case "+": fallthrough
     case "-": fallthrough
     case "*": fallthrough
