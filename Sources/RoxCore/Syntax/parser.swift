@@ -52,6 +52,7 @@ public class Parser {
       do {
         statements.append(try parseDeclarationStatement())
       } catch {
+        break
       }
     }
     return statements
@@ -63,11 +64,14 @@ public func parseRepl() -> Any? {
     while !isEOF {
       do {
         statements.append(try parseDeclarationStatement())
+        let last = statements[statements.count - 1]
         if foundExpression {
-          let last = statements[statements.count - 1]
+          return (last as! Statement.Expression).expression
+        } else if last is Statement.Expression {
           return (last as! Statement.Expression).expression
         }
       } catch {
+        break
       }
       allowExpression = false
     }
@@ -88,15 +92,15 @@ public func parseRepl() -> Any? {
   /* Expressions */
 
   private func parseExpression() throws -> Expression {
-    return try parseAssignment()
+    return try parseAssignmentExpression()
   }
 
-  private func parseAssignment() throws -> Expression {
-    let expression = try parseEquality()
+  private func parseAssignmentExpression() throws -> Expression {
+    let expression = try parseEqualityExpression()
 
     if match(.Operator("=")) {
       let equals = previous()
-      let value = try parseAssignment()
+      let value = try parseAssignmentExpression()
       
       if expression is Expression.Variable {
         let name = (expression as! Expression.Variable).name
@@ -107,57 +111,57 @@ public func parseRepl() -> Any? {
     return expression
   }
 
-  private func parseEquality() throws -> Expression {
-    var expression = try parseComparison()
+  private func parseEqualityExpression() throws -> Expression {
+    var expression = try parseComparisonExpression()
     while match(.Operator("!="), .Operator("==")) {
       let `operator` = previous()
-      let right = try parseComparison()
+      let right = try parseComparisonExpression()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
   }
 
-  private func parseComparison() throws -> Expression {
-    var expression = try parseAddition()
+  private func parseComparisonExpression() throws -> Expression {
+    var expression = try parseAdditionExpression()
     while match(.Operator(">"), .Operator(">="), .Operator("<"), .Operator("<=")) {
       let `operator` = previous()
-      let right = try parseAddition()
+      let right = try parseAdditionExpression()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
   }
 
-  private func parseAddition() throws -> Expression {
-    var expression = try parseMultiplication()
+  private func parseAdditionExpression() throws -> Expression {
+    var expression = try parseMultiplicationExpression()
 
     while match(.Operator("-"), .Operator("+")) {
       let `operator` = previous()
-      let right = try parseMultiplication()
+      let right = try parseMultiplicationExpression()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
   }
 
-  private func parseMultiplication() throws -> Expression {
-    var expression = try parseUnary()
+  private func parseMultiplicationExpression() throws -> Expression {
+    var expression = try parseUnaryExpression()
     while match(.Operator("/"), .Operator("*")) {
       let `operator` = previous()
-      let right = try parseMultiplication()
+      let right = try parseMultiplicationExpression()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
   }
 
-  private func parseUnary() throws -> Expression {
+  private func parseUnaryExpression() throws -> Expression {
     if match(.Operator("-"), .Operator("!")) {
       let `operator` = previous()
-      let right = try parseUnary()
+      let right = try parseUnaryExpression()
       return Expression.Unary(`operator`, right)
     }
-    return try parsePrimary()
+    return try parsePrimaryExpression()
   }
 
-  private func parsePrimary() throws -> Expression {
+  private func parsePrimaryExpression() throws -> Expression {
     if match(.Reserved("true")) { return Expression.Literal(true) }
     if match(.Reserved("false")) { return Expression.Literal(false) }
     if match(.Reserved("null")) { return Expression.Literal(nil) }
@@ -203,9 +207,8 @@ public func parseRepl() -> Any? {
     let value = try parseExpression()
     if allowExpression && isEOF {
       foundExpression = true
-    } else {
-      try consume(.Punctuation(";"), "Expect ';' after expression", false)
     }
+    try consume(.Punctuation(";"), "Expect ';' after expression", false)
     return Statement.Expression(value)
   }
   
@@ -271,7 +274,7 @@ public func parseRepl() -> Any? {
 
   @discardableResult
   private func consume(_ type: TokenType, _ message: String, _ required: Bool = true) throws -> Token {
-    if !required { return current() }
+    if !required { return check(type) ? next() : current() }
     if check(type) { return next() }
     throw error(current(), message)
   }
