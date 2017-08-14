@@ -14,6 +14,7 @@ class InterpreterTests: XCTestCase {
     let parser = Parser()
     let interpreter = Interpreter()
   
+  @discardableResult
   private func evaluate(_ source: String) -> Any? {
     do {
       let expression = parser.parse(lexer.scan(source), type: .Expression) as? Expression;
@@ -80,7 +81,7 @@ class InterpreterTests: XCTestCase {
   func testPerformance() {
       // This is an example of a performance test case.
     self.measure {
-        _ = self.evaluate("1 + 1 * 2420 + 38348 / 2 + 2848 + (34843 + 2) + ( 2 * 2) + 33949238")
+        self.evaluate("1 + 1 * 2420 + 38348 / 2 + 2848 + (34843 + 2) + ( 2 * 2) + 33949238")
     }
   }
     

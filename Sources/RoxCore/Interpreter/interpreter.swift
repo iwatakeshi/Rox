@@ -17,6 +17,17 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
 
   public init() {}
   
+  public func interpret(_ expression: Expression) -> Any? {
+    do {
+      return try evaluate(expression)
+    } catch RoxRuntimeException.error(let token, let message) {
+      Rox.error(.RoxRuntimeException(.error(token, message)))
+      return nil
+    } catch {
+      return nil
+    }
+  }
+
   public func interpret(_ statements: [Statement]) {
     do {
       for statement in statements {
@@ -55,6 +66,9 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     case .Operator("*"):
       if (!isNumber(left) || !isNumber(right)) { break }
         return try evaluateNumber(expression.operator, left, right)
+    case .Operator("=="):
+      if (!isNumber(left) || !isNumber(right)) { break }
+      return (castNumber(left) == castNumber(right))
     case .Operator(">"):
       if (!isNumber(left) || !isNumber(right)) { break }
       return (castNumber(left) > castNumber(right))
@@ -68,8 +82,7 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       if (!isNumber(left) || !isNumber(right)) { break }
       return (castNumber(left) <= castNumber(right))
       
-    default:
-      return nil
+    default: break;
     }
     throw RoxRuntimeException.error(expression.operator, "Operands must be two numbers or two strings.")
   }
@@ -122,9 +135,9 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   }
 
   public func visit(statement: Statement.Variable) throws {
-    var value: Expression?
+    var value: Any?
     if statement.value != nil {
-      value = try evaluate(statement.value!) as? Expression
+      value = try evaluate(statement.value!)
     }
     environment.define(statement.name.lexeme, value)
   }
