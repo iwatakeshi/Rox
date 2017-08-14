@@ -62,4 +62,11 @@ public class Expression {
     }
   }
   
+  public class Variable: Expression {
+    private(set) var name: Token
+    public init(_ name: Token) {
+      self.name = name
+    }
+  }
+  
 }

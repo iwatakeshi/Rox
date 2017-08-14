@@ -50,7 +50,7 @@ public class Parser {
       do {
         statements.append(try parseStatement())
       } catch {
-        
+//        break;
       }
     }
     return statements
@@ -131,21 +131,27 @@ public class Parser {
     if match(.NumberLiteral, .StringLiteral) {
       return Expression.Literal(previous().literal)
     }
-
+    
+    if match(.Identifier) { return Expression.Variable(previous()) }
+    
     if match(.Punctuation("(")) {
       let expression = try parseExpression()
       try consume(.Punctuation(")"), "Expect ')' after expression")
       return Expression.Parenthesized(expression)
     }
 
-    throw error(previous(), "Expect expression.")
+    throw error(previous(), "Expect expression")
   }
 
   /* Statements */
   
   private func parseStatement() throws -> Statement {
-    if match(.Reserved("print")) { return try parsePrintStatement() }
-    return try parseExpressionStatement()
+    do {
+      if match(.Reserved("print")) { return try parsePrintStatement() }
+      return try parseExpressionStatement()
+    } catch RoxException.RoxParserException(.error(_, _)) {
+      return nil
+    }
   }
   
   private func parseExpressionStatement() throws -> Statement {
@@ -160,6 +166,25 @@ public class Parser {
     return Statement.Print(value)
   }
   
+  private func parseDeclarationStatement() throws -> Statement {
+    do {
+      if match(.Reserved("var")) { return parseVariableStatement() }
+    } catch RoxException.RoxParserException(.error(_, _)) {
+      synchronize()
+    }
+  }
+  
+  public func parseVariableDeclaration() throws -> Statement {
+    let name = try consume(.Identifier, "Expect identifier after 'var' declaration")
+    
+    var value: Expression?
+    
+    if match(.Punctuation("=")) {
+      value = parseExpression()
+    }
+    try consume(.Punctuation(";"), "Expect ';' after variable declaration", false)
+    return Statement.Variable(name, value)
+  }
   
   
   

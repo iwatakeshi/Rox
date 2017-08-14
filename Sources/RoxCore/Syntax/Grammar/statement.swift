@@ -33,4 +33,16 @@ public class Statement {
       try visitor.visit(statement: self)
     }
   }
+
+  public class Variable: Statement {
+    private(set) var name: Token
+    private(set) var value: Expression?
+    public init(_ name: Token, _ value: Expression?) {
+      self.name = name
+      self.value = value
+    }
+    public override func accept(visitor: StatementVisitor) throws {
+      try visitor.visit(statement: self)
+    }
+  }
 }
