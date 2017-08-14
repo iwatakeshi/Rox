@@ -7,15 +7,16 @@
 //
 
 import XCTest
-import Core
+import RoxCore
 
 class ParserTests: XCTestCase {
   let lexer = Lexer()
+  let parser = Parser()
   let printer = ASTPrinter()
   
   private func parse(_ source: String) -> String {
     do {
-      return try printer.print(Parser(lexer.scan(source)).parse())
+      return try printer.print(parser.parse(lexer.scan(source), type: .Expression) as? Expression)
     } catch {
       return ""
     }
