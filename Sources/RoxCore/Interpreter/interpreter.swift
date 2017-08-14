@@ -8,13 +8,20 @@
 
 import Foundation
 
-public class Interpreter : ExpressionVisitor {
+/**
+ A class responsible of evaluating a given parse tree.
+ */
+public class Interpreter : ExpressionVisitor, StatementVisitor {
+
+  private(set) var environment = Environment()
+
   public init() {}
   
-  public func interpret(_ expression: Expression) {
+  public func interpret(_ statements: [Statement]) {
     do {
-      let value = try evaluate(expression)
-        print(value)
+      for statement in statements {
+        try execute(statement)
+      }
     } catch RoxRuntimeException.error(let token, let message) {
         Rox.error(.RoxParserException(.error(token, message)))
     } catch {
@@ -22,69 +29,123 @@ public class Interpreter : ExpressionVisitor {
     }
   }
   
-  public func visit<T: Any>(visitor: Expression.Binary) throws -> T? {
-    let left = try evaluate(visitor.left)
-    let right = try evaluate(visitor.right)
+  /* Expressions */
+  
+  public func visit(expression: Expression.Assignment) throws -> Any? {
+    let value = try evaluate(expression.value)
+    try environment.assign(expression.name, value)
+    return value
+  }
+
+  public func visit(expression: Expression.Binary) throws -> Any? {
+    let left = try evaluate(expression.left)
+    let right = try evaluate(expression.right)
     
-    switch visitor.operator.type {
+    switch expression.operator.type {
     case .Operator("+"):
       if left is String && right is String {
-        return (left as! String) + (right as! String) as? T
+        return (left as! String) + (right as! String)
       }
       if isNumber(left) && isNumber(right) {
-        return try evaluateNumber(visitor.operator, left, right) as? T
+        return try evaluateNumber(expression.operator, left, right)
       }
       break
     case .Operator("-"): fallthrough
     case .Operator("/"): fallthrough
     case .Operator("*"):
       if (!isNumber(left) || !isNumber(right)) { break }
-        return try evaluateNumber(visitor.operator, left, right) as? T
+        return try evaluateNumber(expression.operator, left, right)
     case .Operator(">"):
       if (!isNumber(left) || !isNumber(right)) { break }
-      return (castNumber(left) > castNumber(right)) as? T
+      return (castNumber(left) > castNumber(right))
     case .Operator(">="):
       if (!isNumber(left) || !isNumber(right)) { break }
-      return (castNumber(left) >= castNumber(right)) as? T
+      return (castNumber(left) >= castNumber(right))
     case .Operator("<"):
       if (!isNumber(left) || !isNumber(right)) { break }
-      return (castNumber(left) < castNumber(right)) as? T
+      return (castNumber(left) < castNumber(right))
     case .Operator("<="):
       if (!isNumber(left) || !isNumber(right)) { break }
-      return (castNumber(left) <= castNumber(right)) as? T
+      return (castNumber(left) <= castNumber(right))
       
     default:
       return nil
     }
-    throw RoxRuntimeException.error(visitor.operator, "Operands must be two numbers or two strings.")
+    throw RoxRuntimeException.error(expression.operator, "Operands must be two numbers or two strings.")
   }
   
-  public func visit<T: Any>(visitor: Expression.Literal) throws -> T? {
-    return visitor.value as? T
+  public func visit(expression: Expression.Literal) throws -> Any? {
+    return expression.value
   }
   
-  public func visit<T: Any>(visitor: Expression.Parenthesized) throws -> T? {
-    return try evaluate(visitor.expression) as? T
+  public func visit(expression: Expression.Parenthesized) throws -> Any? {
+    return try evaluate(expression.expression)
   }
   
-  public func visit<T: Any>(visitor: Expression.Unary) throws -> T? {
-    let right = try evaluate(visitor.right)
-    switch visitor.operator.type {
+  public func visit(expression: Expression.Unary) throws -> Any? {
+    let right = try evaluate(expression.right)
+    switch expression.operator.type {
     case .Operator("-"):
-      try checkNumberOperand(visitor.operator, operand: right)
+      try checkNumberOperand(expression.operator, operand: right)
       if right is Double {
-        return (-(right as! Double)) as? T
-      } else { return (-(right as! Int)) as? T }
+        return (-(right as! Double))
+      } else { return (-(right as! Int)) }
     case .Operator("!"):
-      return !isTruthy(right) as? T
+      return !isTruthy(right)
     default: break
     }
     return nil
   }
 
-  public func evaluate(_ expression: Expression) throws -> Any {
-    return try expression.accept(visitor: self)
+  public func visit(expression: Expression.Variable) throws -> Any? {
+    return try environment.get(expression.name)
   }
+  
+  @discardableResult
+  public func evaluate(_ expression: Expression) throws -> Any {
+    return try expression.accept(visitor: self)!
+  }
+  
+  /* Statements */
+  
+  public func visit(statement: Statement.Block) throws {
+    try execute(statement, Environment(environment))
+  }
+  
+  public func visit(statement: Statement.Expression) throws {
+    try evaluate(statement.expression);
+  }
+  
+  public func visit(statement: Statement.Print) throws {
+    let value = try evaluate(statement.expression)
+    print(value)
+  }
+
+  public func visit(statement: Statement.Variable) throws {
+    var value: Expression?
+    if statement.value != nil {
+      value = try evaluate(statement.value!) as? Expression
+    }
+    environment.define(statement.name.lexeme, value)
+  }
+  
+  public func execute(_ statement: Statement) throws {
+    try statement.accept(visitor: self)
+  }
+  
+  public func execute(_ block: Statement.Block, _ environment: Environment) throws {
+    let previous = self.environment
+    do  {
+      self.environment = environment
+      for statement in block.statements {
+        try execute(statement)
+      }
+    } catch {
+      self.environment = previous
+    }
+  }
+  
+  /* Helpers */
   
   private func isTruthy(_ value: Any?) -> Bool {
     if value == nil { return false }

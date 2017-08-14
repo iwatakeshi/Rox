@@ -14,15 +14,29 @@
 ## Grammar
 
 ```
-expression     → equality ;
-equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-comparison     → addition ( ( ">" | ">=" | "<" | "<=" ) addition )* ;
-addition       → multiplication ( ( "-" | "+" ) multiplication )* ;
-multiplication → unary ( ( "/" | "*" ) unary )* ;
-unary          → ( "!" | "-" ) unary ;
-               | primary ;
-primary        → NUMBER | STRING | "false" | "true" | "nil"
-               | "(" expression ")" ;
+program                   → declaration* EOF ;
+
+declaration               → var-declaration
+                          | statement
+
+var-declaration           → "var" IDENTIFIER ("=" expression)? (";")?
+statement                 → expression-statement
+                          | print-statement ;
+expresion-statement       → expression (";")? ;
+print-statement           → "print" expression (";")? ;
+expression                → assignment
+assignment                → identifier "=" assignment
+                          | equality ;
+equality                  → comparison ( ( "!=" | "==" ) comparison )* ;
+comparison                → addition ( ( ">" | ">=" | "<" | "<=" ) addition )* ;
+addition                  → multiplication ( ( "-" | "+" ) multiplication )* ;
+multiplication            → unary ( ( "/" | "*" ) unary )* ;
+unary                     → ( "!" | "-" ) unary ;
+                          | primary ;
+primary                   → "true" | "false" | "null"
+                          | NUMBER | STRING
+                          | "(" expression ")"
+                          | IDENTIFIER ;
 ```
 
 ## Types

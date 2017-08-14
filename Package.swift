@@ -7,8 +7,8 @@ let package = Package(
     targets: [
       Target(
         name: "Rox",
-        dependencies: ["Core"]
+        dependencies: ["RoxCore"]
      ),
-      Target(name: "Core")
+      Target(name: "RoxCore")
     ]
 )
