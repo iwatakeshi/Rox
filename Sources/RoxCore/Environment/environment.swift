@@ -39,10 +39,12 @@ public class Environment {
   public func assign(_ name: Token, _ value: Any?) throws {
     if values[name.lexeme] != nil {
       values[name.lexeme] = value
+      return
     }
     
     if enclosing != nil {
       try enclosing?.assign(name, value)
+      return
     }
     
     throw RoxRuntimeException.error(name, "Undefined variable \"\(name.lexeme)\"")

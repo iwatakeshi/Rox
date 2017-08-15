@@ -47,6 +47,12 @@ public class Expression {
     }
   }
   
+  public class Range: Binary {
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)
+    }
+  }
+  
   public class Literal: Expression {
     private(set) var value: Any
     public init(_ value: Any?) {
@@ -57,6 +63,12 @@ public class Expression {
       return try visitor.visit(expression: self)!
     }
     
+  }
+
+  public class Logical: Binary {
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)!
+    }
   }
   
   public class Unary: Expression {

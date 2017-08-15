@@ -10,7 +10,6 @@ import Foundation
 
 public class ASTPrinter: ExpressionVisitor {
   
-  
   public init() {}
   
   public func visit(expression: Expression.Assignment) throws -> Any? {
@@ -24,9 +23,16 @@ public class ASTPrinter: ExpressionVisitor {
   public func visit(expression: Expression.Literal) throws -> Any? {
     return String(describing: expression.value) 
   }
+  public func visit(expression: Expression.Logical) throws -> Any? {
+    return try parenthesize(expression.operator.lexeme, expression.left, expression.right)
+  }
   
   public func visit(expression: Expression.Parenthesized) throws -> Any? {
     return try parenthesize("group", expression.expression)
+  }
+  
+  public func visit(expression: Expression.Range) throws -> Any? {
+    return try parenthesize(expression.operator.lexeme, expression.left, expression.right)
   }
   
   public func visit(expression: Expression.Unary) throws -> Any? {

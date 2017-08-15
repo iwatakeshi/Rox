@@ -91,8 +91,40 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     return expression.value
   }
   
+  public func visit(expression: Expression.Logical) throws -> Any? {
+    let left = try evaluate(expression.left)
+    if expression.operator.type == .Operator("or") {
+      if (isTruthy(left)) { return left }
+    } else {
+      if (!isTruthy(left)) { return left}
+    }
+    return try evaluate(expression.right)
+  }
+  
   public func visit(expression: Expression.Parenthesized) throws -> Any? {
     return try evaluate(expression.expression)
+  }
+  
+  public func visit(expression: Expression.Range) throws -> Any? {
+    let left = try evaluate(expression.left)
+    let right = try evaluate(expression.right)
+    if isNumber(left) && isNumber(right) {
+      if left is Double && right is Double {
+        let a = left as! Double
+        let b = right as! Double
+        if a > b { return stride(from: b, to: a, by: -1) }
+        else { return (a..<b) }
+      }
+      
+      if left is Int && right is Int {
+        let a = left as! Int
+        let b = right as! Int
+        if a > b { return stride(from: b, to: a, by: -1) }
+        else { return (a..<b) }
+      }
+      
+    }
+    throw RoxRuntimeException.error(expression.operator, "Operands must be two numbers")
   }
   
   public func visit(expression: Expression.Unary) throws -> Any? {
@@ -129,6 +161,23 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     try evaluate(statement.expression);
   }
   
+  public func visit(statement: Statement.For) throws {
+    environment.define((statement.name?.lexeme)!, 0)
+    if statement.index != nil {
+      environment.define((statement.index?.lexeme)!, 0)
+    }
+//    let range = try evaluate(statement.expression) as! StrideTo<Int>
+    print("warn: for-loop not implemented")
+  }
+  
+  public func visit(statement: Statement.If) throws {
+    if isTruthy(try evaluate(statement.condition)) {
+      try execute(statement.then)
+    } else if statement.else != nil {
+      try execute(statement.else!)
+    }
+  }
+  
   public func visit(statement: Statement.Print) throws {
     let value = try evaluate(statement.expression)
     print(value)
@@ -140,6 +189,12 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       value = try evaluate(statement.value!)
     }
     environment.define(statement.name.lexeme, value)
+  }
+  
+  public func visit(statement: Statement.While) throws {
+    while isTruthy(try evaluate(statement.condition)) {
+      try execute(statement.body)
+    }
   }
   
   public func execute(_ statement: Statement) throws {

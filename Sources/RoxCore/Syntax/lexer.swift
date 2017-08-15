@@ -59,7 +59,7 @@ public class Lexer {
       case "{": addToken(.Punctuation("{")); break
       case "}": addToken(.Punctuation("}")); break
       case ",": addToken(.Punctuation(",")); break
-      case ".": addToken(.Punctuation(".")); break
+      case ".": addToken(match(".") ? .Operator("..") : .Punctuation(".")); break
       case ";": addToken(.Punctuation(";")); break
       case "#": ScanComment(); break
       case "-": addToken(.Operator("-")); break
