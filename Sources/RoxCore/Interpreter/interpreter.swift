@@ -124,7 +124,7 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       }
       
     }
-    throw RoxRuntimeException.error(expression.operator, "Operands must be two numbers")
+    throw RoxRuntimeException.error(expression.operator, "Operands must be two numbers of the same type")
   }
   
   public func visit(expression: Expression.Unary) throws -> Any? {
@@ -166,7 +166,6 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     if statement.index != nil {
       environment.define((statement.index?.lexeme)!, 0)
     }
-//    let range = try evaluate(statement.expression) as! StrideTo<Int>
     print("warn: for-loop not implemented")
   }
   
