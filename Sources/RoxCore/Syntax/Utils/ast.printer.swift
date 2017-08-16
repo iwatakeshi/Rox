@@ -9,6 +9,7 @@
 import Foundation
 
 public class ASTPrinter: ExpressionVisitor {
+
   
   public init() {}
   
@@ -22,6 +23,10 @@ public class ASTPrinter: ExpressionVisitor {
   
   public func visit(expression: Expression.Call) throws -> Any? {
     return ""
+  }
+  
+  public func visit(expression: Expression.Function) throws -> Any? {
+    return "(lambda (arity \(expression.parameters.count)))"
   }
   
   public func visit(expression: Expression.Literal) throws -> Any? {

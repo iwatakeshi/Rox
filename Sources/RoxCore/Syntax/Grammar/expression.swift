@@ -50,6 +50,19 @@ public class Expression {
     }
   }
   
+  public class Function : Expression {
+    private(set) var parameters: [Token]
+    private(set) var body: [RoxCore.Statement] = []
+    public init(_ parameters: [Token], _ body: [RoxCore.Statement]) {
+      self.parameters = parameters
+      self.body = body
+    }
+    
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)
+    }
+  }
+  
   public class Literal: Expression {
     private(set) var value: Any
     public init(_ value: Any?) {

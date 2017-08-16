@@ -12,6 +12,7 @@ public protocol ExpressionVisitor {
   func visit(expression: Expression.Assignment) throws -> Any?
   func visit(expression: Expression.Binary) throws -> Any?
   func visit(expression: Expression.Call) throws -> Any?
+  func visit(expression: Expression.Function) throws -> Any?
   func visit(expression: Expression.Literal) throws -> Any?
   func visit(expression: Expression.Logical) throws -> Any?
   func visit(expression: Expression.Parenthesized) throws -> Any?

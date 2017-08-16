@@ -53,13 +53,10 @@ public class Statement {
 
   public class Function: Statement {
     private(set) var name: Token
-    private(set) var parameters: [Token]
-    private(set) var body: [Statement]
-    
-    public init(_ name: Token, _ parameters: [Token], _ body: [Statement]) {
+    private(set) var function: RoxCore.Expression.Function
+    public init(_ name: Token, _ function: RoxCore.Expression.Function) {
       self.name = name
-      self.parameters = parameters
-      self.body = body
+      self.function = function
     }
     
     public override func accept(visitor: StatementVisitor) throws {
