@@ -36,18 +36,15 @@ public class Expression {
     }
   }
   
-  public class Parenthesized: Expression {
-    private(set) var expression: Expression
-    public init(_ expression: Expression) {
-      self.expression = expression
+  public class Call : Expression {
+    private(set) var callee: Expression
+    private(set) var parenthesis: Token
+    private(set) var arguments: [Expression]
+    public init(_ callee: Expression, _ parenthesis: Token, _ arguments: [Expression]) {
+      self.callee = callee
+      self.parenthesis = parenthesis
+      self.arguments = arguments
     }
-    
-    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
-      return try visitor.visit(expression: self)!
-    }
-  }
-  
-  public class Range: Binary {
     public override func accept(visitor: ExpressionVisitor) throws -> Any? {
       return try visitor.visit(expression: self)
     }
@@ -64,10 +61,27 @@ public class Expression {
     }
     
   }
-
+  
   public class Logical: Binary {
     public override func accept(visitor: ExpressionVisitor) throws -> Any? {
       return try visitor.visit(expression: self)!
+    }
+  }
+  
+  public class Parenthesized: Expression {
+    private(set) var expression: Expression
+    public init(_ expression: Expression) {
+      self.expression = expression
+    }
+    
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)!
+    }
+  }
+  
+  public class Range: Binary {
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)
     }
   }
   

@@ -20,32 +20,65 @@ A fun and simple languange for smarties
 ```
 program                   → declaration* EOF ;
 
-declaration               → var-declaration
+declaration               → func-declaration
+                          → var-declaration
                           | statement ;
 
+func-declaration          → "func" function ;
+
+function                  → IDENTIFIER "(" parameters? ")" block ;
+
+paramters                 → IDENTIFIER ("," IDENTIFIER)* ;
+
 var-declaration           → "var" IDENTIFIER ("=" expression)? (";")?
+
 statement                 → expression-statement
                           | for-statement
                           | if-statement
                           | print-statement
+                          | return-statement
                           | while-statement
                           | block-statement
+
 expresion-statement       → expression (";")? ;
+
 for-statement             → "for" IDENTIFIER "in" expression body
+                          | "for" "(" IDENTIFIER, IDENTIFIER ")" "in" expression body              
+
 if-statement              → "if" ("(")? expression (")")? statement ("else" statement)
+
 print-statement           → "print" expression (";")? ;
-block-statement           → "{" declaration* "}"
+
+return-statement          → "return" expression (";")? ;
+
+while-statement           → "while" ("(")? expression (")")? body ;
+
+block-statement           → "{" declaration* "}" ;
+
 expression                → assignment ;
+
 assignment                → IDENTIFIER "=" assignment
                           | logical-or ;
+
 logical-or                → logical-and ("or" logical-or)* ;
+
 logical-and               → equality ("and" equality)* ;
+
 equality                  → comparison ( ( "!=" | "==" ) comparison )* ;
+
 comparison                → addition ( ( ">" | ">=" | "<" | "<=" ) addition )* ;
+
 addition                  → multiplication ( ( "-" | "+" ) multiplication )* ;
+
 multiplication            → unary ( ( "/" | "*" ) unary )* ;
-unary                     → ( "!" | "-" ) unary
-                          | primary ;
+
+unary                     → ( "!" | "-" ) unary 
+                          | call ;
+
+call                      → primary ( "(" arguments? ")" )* ;
+
+arguments                 → expression ("," expression)* ;
+
 primary                   → "true" | "false" | "null"
                           | NUMBER | STRING
                           | "(" expression ")"

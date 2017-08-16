@@ -13,9 +13,16 @@ import Foundation
  */
 public class Interpreter : ExpressionVisitor, StatementVisitor {
 
-  private(set) var environment = Environment()
-
-  public init() {}
+  private(set) var globals = Environment()
+  private(set) var environment: Environment
+  
+  public init() {
+    environment = globals
+    
+    globals.define("clock", RoxFunction("clock", { (arg1: Interpreter, arg2: [Any?]) -> Any? in
+      return Date().millisecondsSince1970
+    }))
+  }
   
   public func interpret(_ expression: Expression) -> Any? {
     do {
@@ -87,6 +94,27 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     throw RoxRuntimeException.error(expression.operator, "Operands must be two numbers or two strings.")
   }
   
+  public func visit(expression: Expression.Call) throws -> Any? {
+    let callee = try evaluate(expression.callee)
+    var arguments = [Any?]()
+    
+    for argument in expression.arguments {
+      arguments.append(try evaluate(argument))
+    }
+    
+    if !(callee is RoxCallable) {
+      throw RoxRuntimeException.error(expression.parenthesis, "Can only call functions and classes.")
+    }
+    
+    let function = callee as! RoxCallable
+    
+    if (arguments.count != function.arity) {
+      throw RoxRuntimeException.error(expression.parenthesis, "Expected \(function.arity) arguments but got \(arguments.count)")
+    }
+    
+    return try function.call(self, arguments)
+  }
+  
   public func visit(expression: Expression.Literal) throws -> Any? {
     return expression.value
   }
@@ -124,7 +152,7 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       }
       
     }
-    throw RoxRuntimeException.error(expression.operator, "Operands must be two numbers")
+    throw RoxRuntimeException.error(expression.operator, "Operands must be two numbers of the same type")
   }
   
   public func visit(expression: Expression.Unary) throws -> Any? {
@@ -147,14 +175,14 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   }
   
   @discardableResult
-  public func evaluate(_ expression: Expression) throws -> Any {
-    return try expression.accept(visitor: self)!
+  public func evaluate(_ expression: Expression) throws -> Any? {
+    return try expression.accept(visitor: self)
   }
   
   /* Statements */
   
   public func visit(statement: Statement.Block) throws {
-    try execute(statement, Environment(environment))
+    try execute(statement.statements, Environment(environment))
   }
   
   public func visit(statement: Statement.Expression) throws {
@@ -166,8 +194,27 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     if statement.index != nil {
       environment.define((statement.index?.lexeme)!, 0)
     }
-//    let range = try evaluate(statement.expression) as! StrideTo<Int>
     print("warn: for-loop not implemented")
+  }
+  
+  public func visit(statement: Statement.Function) throws {
+    let closure = environment
+    let function = RoxFunction(statement.name.lexeme, statement.parameters.count,
+      { (a: Interpreter, b: [Any?]) in
+      let local = Environment(closure)
+      for (index, parameter) in statement.parameters.enumerated() {
+        local.define(parameter.lexeme, b[index])
+      }
+        do {
+          try a.execute(statement.body, local)
+        } catch RoxReturnException.return(let value) {
+          return value
+        } catch {
+          
+        }
+      return nil
+    })
+    environment.define(statement.name.lexeme, function)
   }
   
   public func visit(statement: Statement.If) throws {
@@ -180,7 +227,17 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   
   public func visit(statement: Statement.Print) throws {
     let value = try evaluate(statement.expression)
-    print(value)
+    if (value != nil) {
+      print(value!)
+    }
+  }
+  
+  public func visit(statement: Statement.Return) throws {
+    var value: Any?
+    if (statement.value != nil) {
+      value = try evaluate(statement.value!)
+    }
+    throw RoxReturnException.return(value)
   }
 
   public func visit(statement: Statement.Variable) throws {
@@ -201,13 +258,15 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     try statement.accept(visitor: self)
   }
   
-  public func execute(_ block: Statement.Block, _ environment: Environment) throws {
+  public func execute(_ block: [Statement], _ environment: Environment) throws {
     let previous = self.environment
     do  {
       self.environment = environment
-      for statement in block.statements {
+      for (_, statement) in block.enumerated() {
         try execute(statement)
       }
+    } catch (let exception as RoxReturnException) {
+      throw exception
     } catch {
       self.environment = previous
     }

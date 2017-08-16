@@ -34,7 +34,7 @@ public class Statement {
       try visitor.visit(statement: self)
     }
   }
-  
+
   public class For: Statement {
     private(set) var name: Token?
     private(set) var index: Token?
@@ -51,6 +51,22 @@ public class Statement {
     }
   }
 
+  public class Function: Statement {
+    private(set) var name: Token
+    private(set) var parameters: [Token]
+    private(set) var body: [Statement]
+    
+    public init(_ name: Token, _ parameters: [Token], _ body: [Statement]) {
+      self.name = name
+      self.parameters = parameters
+      self.body = body
+    }
+    
+    public override func accept(visitor: StatementVisitor) throws {
+      try visitor.visit(statement: self)
+    }
+  }
+  
   public class If: Statement {
     private(set) var condition: RoxCore.Expression
     private(set) var then: Statement
@@ -70,6 +86,19 @@ public class Statement {
     public init(_ expression: RoxCore.Expression) {
       self.expression = expression
     }
+    public override func accept(visitor: StatementVisitor) throws {
+      try visitor.visit(statement: self)
+    }
+  }
+  
+  public class Return: Statement {
+    private(set) var keyword: Token
+    private(set) var value: RoxCore.Expression?
+    public init(_ keyword: Token, _ value: RoxCore.Expression?) {
+      self.keyword = keyword
+      self.value = value
+    }
+    
     public override func accept(visitor: StatementVisitor) throws {
       try visitor.visit(statement: self)
     }
