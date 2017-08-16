@@ -36,7 +36,7 @@ public class Lexer {
   public func scan(_ source: String) -> [Token] {
     self.source = source
     self.position = 0
-    self.line = 0
+    self.line = 1
     self.column = 1
     self.tokens = [Token]()
     return scan()
@@ -48,7 +48,7 @@ public class Lexer {
       startLocation = Location(position, line, column)
       scanToken()
     }
-    tokens.append(Token(.EOF, "", nil, startLocation))
+    tokens.append(Token(.EOF, "", nil, Location.mark(startLocation, endLocation)))
     return tokens
   }
   
@@ -116,7 +116,7 @@ public class Lexer {
   }
   
   private func addToken(_ type: TokenType, lexeme: String, literal: Any?) {
-    tokens.append(Token( type, source[start..<position], literal, startLocation))
+    tokens.append(Token( type, source[start..<position], literal, Location.mark(startLocation, endLocation)))
   }
   
   private func match(_ expected: String) -> Bool {

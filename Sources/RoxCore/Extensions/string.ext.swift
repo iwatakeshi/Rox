@@ -43,6 +43,14 @@ extension String {
     get { return self.characters.count }
   }
   
+  var first: String {
+    get { return self.count > 0 ? self[0] : "" }
+  }
+  
+  var last: String {
+    get { return self.count > 0 ? self[self.count - 1] : "" }
+  }
+  
   func toArray() -> Array<Character> {
     return self.count > 0 ? Array(self.characters) : ["\0"]
   }
