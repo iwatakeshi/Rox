@@ -58,25 +58,25 @@ public class Parser {
     return statements
   }
   
-public func parseRepl() -> Any? {
-  var statements = [Statement]()
-    allowExpression = true
-    while !isEOF {
-      do {
-        statements.append(try parseDeclarationStatement())
-        let last = statements[statements.count - 1]
-        if foundExpression {
-          return (last as! Statement.Expression).expression
-        } else if last is Statement.Expression {
-          return (last as! Statement.Expression).expression
+  public func parseRepl() -> Any? {
+    var statements = [Statement]()
+      allowExpression = true
+      while !isEOF {
+        do {
+          statements.append(try parseDeclarationStatement())
+          let last = statements[statements.count - 1]
+          if foundExpression {
+            return (last as! Statement.Expression).expression
+          } else if last is Statement.Expression {
+            return (last as! Statement.Expression).expression
+          }
+        } catch {
+          break
         }
-      } catch {
-        break
+        allowExpression = false
       }
-      allowExpression = false
-    }
-    return statements
-}
+      return statements
+  }
 
   /**
    Parses the given tokens and generates a parse tree
@@ -207,6 +207,8 @@ public func parseRepl() -> Any? {
     if match(.Reserved("false")) { return Expression.Literal(false) }
     if match(.Reserved("null")) { return Expression.Literal(nil) }
     
+    if match(.Reserved("func")) { return try parseFunctionBody("function") }
+    
     if match(.NumberLiteral, .StringLiteral) {
       return Expression.Literal(previous().literal)
     }
@@ -223,6 +225,19 @@ public func parseRepl() -> Any? {
   }
 
   /* Statements */
+  
+  private func parseDeclarationStatement() throws -> Statement {
+    do {
+      if check(.Reserved("func")) && check(.Identifier, 1) {
+        try consume(.Reserved("func"), "")
+        return try parseFunctionStatement("function")
+      }
+      if match(.Reserved("var")) { return try parseVariableStatement() }
+    } catch RoxException.RoxParserException(.error(_, _)) {
+      synchronize()
+    }
+    return try parseStatement()
+  }
   
   private func parseStatement() throws -> Statement {
     do {
@@ -248,16 +263,6 @@ public func parseRepl() -> Any? {
     return statements
   }
   
-  private func parseDeclarationStatement() throws -> Statement {
-    do {
-      if match(.Reserved("func")) { return try parseFunctionStatement("function") }
-      if match(.Reserved("var")) { return try parseVariableStatement() }
-    } catch RoxException.RoxParserException(.error(_, _)) {
-      synchronize()
-    }
-    return try parseStatement()
-  }
-  
   private func parseExpressionStatement() throws -> Statement {
     let value = try parseExpression()
     if allowExpression && isEOF {
@@ -268,20 +273,9 @@ public func parseRepl() -> Any? {
   }
   
   private func parseFunctionStatement(_ kind: String) throws -> Statement.Function {
-    let name = try consume(.Identifier, "Expect identifier after \(kind) name")
-    var parameters = [Token]()
-    try consume(.Punctuation("("), "Expect '(' after \(kind) name")
-    if !check(.Punctuation(")")) {
-      repeat {
-       parameters.append(try consume(.Identifier, "Expect parameter name"))
-      } while match(.Punctuation(","))
-    }
-    try consume(.Punctuation(")"), "Expect ')' after parameters")
-    
-    try consume(.Punctuation("{"), "Expect '{' before \(kind) body")
-    
-    let body = try parseBlockStatement()
-    return Statement.Function(name, parameters, body)
+    let name: Token = try consume(.Identifier, "Expect identifier after \(kind) name")
+    let function = try parseFunctionBody(kind)
+    return Statement.Function(name, function)
   }
   
   private func parseForStatement() throws -> Statement {
@@ -362,6 +356,12 @@ public func parseRepl() -> Any? {
     return current().type == type
   }
   
+  private func check(_ type: TokenType, _ by: Int) -> Bool {
+    if (position + by >= tokens.count) { return false }
+    if (tokens[position + by].type == .EOF) { return false }
+    return tokens[position + by].type == type
+  }
+  
   private func current() -> Token {
     return tokens[position]
   }
@@ -417,5 +417,21 @@ public func parseRepl() -> Any? {
     }
     let parenthesis = try consume(.Punctuation(")"), "Expect ')' after arguments")
     return Expression.Call(callee, parenthesis, arguments)
+  }
+  
+  private func parseFunctionBody(_ kind: String) throws -> Expression.Function {
+    var parameters = [Token]()
+    try consume(.Punctuation("("), "Expect '(' after \(kind) name")
+    if !check(.Punctuation(")")) {
+      repeat {
+        parameters.append(try consume(.Identifier, "Expect parameter name"))
+      } while match(.Punctuation(","))
+    }
+    try consume(.Punctuation(")"), "Expect ')' after parameters")
+    
+    try consume(.Punctuation("{"), "Expect '{' before \(kind) body")
+    
+    let body = try parseBlockStatement()
+    return Expression.Function(parameters, body)
   }
 }
