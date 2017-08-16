@@ -36,6 +36,7 @@ statement                 → expression-statement
                           | for-statement
                           | if-statement
                           | print-statement
+                          | return-statement
                           | while-statement
                           | block-statement
 
@@ -48,7 +49,11 @@ if-statement              → "if" ("(")? expression (")")? statement ("else" st
 
 print-statement           → "print" expression (";")? ;
 
-block-statement           → "{" declaration* "}"
+return-statement          → "return" expression (";")? ;
+
+while-statement           → "while" ("(")? expression (")")? body ;
+
+block-statement           → "{" declaration* "}" ;
 
 expression                → assignment ;
 

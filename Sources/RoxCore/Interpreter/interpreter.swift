@@ -198,15 +198,20 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   }
   
   public func visit(statement: Statement.Function) throws {
-    let function = RoxFunction(
-      statement.name.lexeme,
-      statement.parameters.count,
+    let closure = environment
+    let function = RoxFunction(statement.name.lexeme, statement.parameters.count,
       { (a: Interpreter, b: [Any?]) in
-      let local = Environment(a.globals)
+      let local = Environment(closure)
       for (index, parameter) in statement.parameters.enumerated() {
         local.define(parameter.lexeme, b[index])
       }
-      try a.execute(statement.body, local)
+        do {
+          try a.execute(statement.body, local)
+        } catch RoxReturnException.return(let value) {
+          return value
+        } catch {
+          
+        }
       return nil
     })
     environment.define(statement.name.lexeme, function)
@@ -225,6 +230,14 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     if (value != nil) {
       print(value!)
     }
+  }
+  
+  public func visit(statement: Statement.Return) throws {
+    var value: Any?
+    if (statement.value != nil) {
+      value = try evaluate(statement.value!)
+    }
+    throw RoxReturnException.return(value)
   }
 
   public func visit(statement: Statement.Variable) throws {
@@ -252,6 +265,8 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       for (_, statement) in block.enumerated() {
         try execute(statement)
       }
+    } catch (let exception as RoxReturnException) {
+      throw exception
     } catch {
       self.environment = previous
     }

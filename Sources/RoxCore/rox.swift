@@ -69,6 +69,7 @@ public class Rox {
       error(token, message)
       errored = true
       break
+    default: break
     }
   }
   

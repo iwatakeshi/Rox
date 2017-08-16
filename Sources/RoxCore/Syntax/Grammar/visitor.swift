@@ -27,6 +27,7 @@ public protocol StatementVisitor {
   func visit(statement: Statement.For) throws
   func visit(statement: Statement.If) throws
   func visit(statement: Statement.Print) throws
+  func visit(statement: Statement.Return) throws
   func visit(statement: Statement.Variable) throws
   func visit(statement: Statement.While) throws
 }

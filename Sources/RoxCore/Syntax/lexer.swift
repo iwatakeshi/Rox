@@ -77,7 +77,7 @@ public class Lexer {
       case "\n": break
       case _ where isDigit(previous()): ScanNumber()
       case _ where isAlpha(previous()): scanIdentifier()
-      default: Rox.error(startLocation, "Unexpcted character '\(previous())'")
+      default: Rox.error(startLocation, "Unexpected character '\(previous())'")
     }
   }
   

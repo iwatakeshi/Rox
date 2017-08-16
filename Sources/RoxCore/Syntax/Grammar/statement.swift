@@ -90,6 +90,19 @@ public class Statement {
       try visitor.visit(statement: self)
     }
   }
+  
+  public class Return: Statement {
+    private(set) var keyword: Token
+    private(set) var value: RoxCore.Expression?
+    public init(_ keyword: Token, _ value: RoxCore.Expression?) {
+      self.keyword = keyword
+      self.value = value
+    }
+    
+    public override func accept(visitor: StatementVisitor) throws {
+      try visitor.visit(statement: self)
+    }
+  }
 
   public class Variable: Statement {
     private(set) var name: Token

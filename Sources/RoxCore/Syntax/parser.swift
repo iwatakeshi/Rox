@@ -230,6 +230,7 @@ public func parseRepl() -> Any? {
       if match(.Reserved("for")) { return try parseForStatement() }
       if match(.Reserved("if")) { return try parseIfStatement() }
       if match(.Reserved("print")) { return try parsePrintStatement() }
+      if match(.Reserved("return")) { return try parseReturnStatement() }
       if match(.Reserved("while")) { return try parseWhileStatement() }
       return try parseExpressionStatement()
     } catch RoxException.RoxParserException(.error(_, _)) {
@@ -315,6 +316,14 @@ public func parseRepl() -> Any? {
     let value = try parseExpression()
     try consume(.Punctuation(";"), "Expect ';' after expression", false)
     return Statement.Print(value)
+  }
+  
+  private func parseReturnStatement() throws -> Statement {
+    let keyword = previous()
+    var value: Expression?
+    if match(.Punctuation(";")) {}
+    value = try parseExpression()
+    return Statement.Return(keyword, value)
   }
   
   public func parseVariableStatement() throws -> Statement {
