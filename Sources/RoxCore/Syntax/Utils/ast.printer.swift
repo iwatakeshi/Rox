@@ -20,6 +20,10 @@ public class ASTPrinter: ExpressionVisitor {
     return try parenthesize(expression.operator.lexeme, expression.left, expression.right)
   }
   
+  public func visit(expression: Expression.Call) throws -> Any? {
+    return ""
+  }
+  
   public func visit(expression: Expression.Literal) throws -> Any? {
     return String(describing: expression.value) 
   }

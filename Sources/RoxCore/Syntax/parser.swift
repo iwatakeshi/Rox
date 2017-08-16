@@ -188,7 +188,18 @@ public func parseRepl() -> Any? {
       let right = try parseUnaryExpression()
       return Expression.Unary(`operator`, right)
     }
-    return try parsePrimaryExpression()
+    return try parseCallExpression()
+  }
+  
+  private func parseCallExpression() throws -> Expression {
+    var expression = try parsePrimaryExpression()
+    
+    while true {
+      if match(.Punctuation("(")) {
+        expression = try finishCall(expression)
+      }  else { break }
+    }
+    return expression
   }
 
   private func parsePrimaryExpression() throws -> Expression {
@@ -236,6 +247,16 @@ public func parseRepl() -> Any? {
     return statements
   }
   
+  private func parseDeclarationStatement() throws -> Statement {
+    do {
+      if match(.Reserved("func")) { return try parseFunctionStatement("function") }
+      if match(.Reserved("var")) { return try parseVariableStatement() }
+    } catch RoxException.RoxParserException(.error(_, _)) {
+      synchronize()
+    }
+    return try parseStatement()
+  }
+  
   private func parseExpressionStatement() throws -> Statement {
     let value = try parseExpression()
     if allowExpression && isEOF {
@@ -243,6 +264,23 @@ public func parseRepl() -> Any? {
     }
     try consume(.Punctuation(";"), "Expect ';' after expression", false)
     return Statement.Expression(value)
+  }
+  
+  private func parseFunctionStatement(_ kind: String) throws -> Statement.Function {
+    let name = try consume(.Identifier, "Expect identifier after \(kind) name")
+    var parameters = [Token]()
+    try consume(.Punctuation("("), "Expect '(' after \(kind) name")
+    if !check(.Punctuation(")")) {
+      repeat {
+       parameters.append(try consume(.Identifier, "Expect parameter name"))
+      } while match(.Punctuation(","))
+    }
+    try consume(.Punctuation(")"), "Expect ')' after parameters")
+    
+    try consume(.Punctuation("{"), "Expect '{' before \(kind) body")
+    
+    let body = try parseBlockStatement()
+    return Statement.Function(name, parameters, body)
   }
   
   private func parseForStatement() throws -> Statement {
@@ -277,15 +315,6 @@ public func parseRepl() -> Any? {
     let value = try parseExpression()
     try consume(.Punctuation(";"), "Expect ';' after expression", false)
     return Statement.Print(value)
-  }
-  
-  private func parseDeclarationStatement() throws -> Statement {
-    do {
-      if match(.Reserved("var")) { return try parseVariableStatement() }
-    } catch RoxException.RoxParserException(.error(_, _)) {
-      synchronize()
-    }
-    return try parseStatement()
   }
   
   public func parseVariableStatement() throws -> Statement {
@@ -368,5 +397,16 @@ public func parseRepl() -> Any? {
       }
       next()
     }
+  }
+  
+  private func finishCall(_ callee: Expression) throws -> Expression {
+    var arguments = [Expression]()
+    if (!check(.Punctuation(")"))) {
+      repeat {
+        arguments.append(try parseExpression())
+      } while match(.Punctuation(","))
+    }
+    let parenthesis = try consume(.Punctuation(")"), "Expect ')' after arguments")
+    return Expression.Call(callee, parenthesis, arguments)
   }
 }
