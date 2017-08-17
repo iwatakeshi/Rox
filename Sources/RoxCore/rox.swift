@@ -1,6 +1,7 @@
 import Foundation
 
 public class Rox {
+  private static var dots = 1
   private static var errored = false
   private static var runtimeErrored = false
   private static var interpreter = Interpreter()
@@ -42,8 +43,8 @@ public class Rox {
   public static func repl() {
     print(about)
     while true {
+      print("> ", separator: " ", terminator: "")
       if var source = readLine() {
-        print("> ", separator: " ", terminator: "")
         if (source == ":exit") {
           break
         }
@@ -65,18 +66,17 @@ public class Rox {
   
   private static func process(_ source: String) -> String {
     var lines = source
-    var depth = 1
     let opening = ["{", "(", "["], closing = ["}", ")", "]"]
     if lines.count > 0 && opening.contains(lines.last) {
       repeat {
-        let spacer = String(repeating: "..", count: depth * 2)
+        let spacer = String(repeating: "..", count: dots)
         print("\(spacer) ", separator: " ", terminator: "")
         if let line = readLine() {
           lines.append(line)
-          if opening.contains(line.last) { depth = depth + 1 }
-          else if closing.contains(line.last) { depth = depth - 1 }
+          if opening.contains(line.last) { dots = dots + 1 }
+          else if closing.contains(line.last) { dots = dots - 1 }
         }
-      } while (isBalanced(lines))
+      } while (!isBalanced(lines))
     }
     return lines
   }
