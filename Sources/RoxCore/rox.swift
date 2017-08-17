@@ -43,6 +43,7 @@ public class Rox {
   public static func repl() {
     print(about)
     while true {
+      dots = 1
       print("> ", separator: " ", terminator: "")
       if var source = readLine() {
         if (source == ":exit") {
