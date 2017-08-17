@@ -142,10 +142,10 @@ public class Parser {
   }
   
   private func parseRangeExpression() throws -> Expression {
-    let expression = try parseAdditionExpression()
+    let expression = try parseComparisonExpression()
     if match(.Operator("..")) {
       let `operator` = previous()
-      let right = try parseAdditionExpression()
+      let right = try parseComparisonExpression()
       return Expression.Range(expression, `operator`, right)
     }
     return expression
