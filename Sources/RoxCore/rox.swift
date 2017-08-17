@@ -68,11 +68,12 @@ public class Rox {
     var lines = source
     let opening = ["{", "(", "["], closing = ["}", ")", "]"]
     if lines.count > 0 && opening.contains(lines.last) {
+      lines.append("\n")
       repeat {
         let spacer = String(repeating: "..", count: dots)
         print("\(spacer) ", separator: " ", terminator: "")
         if let line = readLine() {
-          lines.append(line)
+          lines.append("\(line)\n")
           if opening.contains(line.last) { dots = dots + 1 }
           else if closing.contains(line.last) { dots = dots - 1 }
         }
