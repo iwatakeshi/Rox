@@ -1,6 +1,7 @@
 import Foundation
 
 public class Rox {
+  private static var dots = 1
   private static var errored = false
   private static var runtimeErrored = false
   private static var interpreter = Interpreter()
@@ -32,13 +33,18 @@ public class Rox {
     mutating func pop() -> Element {
       return items.removeLast()
     }
+
+    mutating func peek() -> Element {
+      return items[items.count - 1];
+    }
+
   }
   
   public static func repl() {
     print(about)
     while true {
+      print("> ", separator: " ", terminator: "")
       if var source = readLine() {
-        print("> ", separator: " ", terminator: "")
         if (source == ":exit") {
           break
         }
@@ -59,49 +65,33 @@ public class Rox {
   }
   
   private static func process(_ source: String) -> String {
-    var result = source
-    var depth = 1
-    while true {
-      if isBalanced(result) { break }
-      let spacer = String(repeating: "..", count: depth)
-      print("\(spacer) ", separator: " ", terminator: "")
-      if let line = readLine() {
-        result.append(line)
-        if line.count > 0 {
-          let left = ["{", "(", "["], right = ["}", ")", "]"]
-          if left.contains(line.last) {
-            depth = depth * 2
-          }
-          if right.contains(line.last) {
-            if !isBalanced(result) {
-              depth = depth / 2
-            }
-          }
-          
+    var lines = source
+    let opening = ["{", "(", "["], closing = ["}", ")", "]"]
+    if lines.count > 0 && opening.contains(lines.last) {
+      repeat {
+        let spacer = String(repeating: "..", count: dots)
+        print("\(spacer) ", separator: " ", terminator: "")
+        if let line = readLine() {
+          lines.append(line)
+          if opening.contains(line.last) { dots = dots + 1 }
+          else if closing.contains(line.last) { dots = dots - 1 }
         }
-      }
+      } while (!isBalanced(lines))
     }
-    return result
+    return lines
   }
   
   private static func isBalanced(_ line: String) -> Bool {
-    var balanced: Bool = true
     var stack = Stack<Character>()
+    let opening = ["{", "(", "["], closing = ["}", ")", "]"]
     for (_, s) in line.toArray().enumerated() {
-      switch s {
-      case "{": fallthrough
-      case "(": fallthrough
-      case "[": stack.push(s); break
-      case "}": fallthrough
-      case ")": fallthrough
-      case "]":
-        if stack.empty { balanced = false }
-        else  { stack.pop() }
-        break
-      default: break
+      if opening.contains(String(s)) { stack.push(s) }
+      else if closing.contains(String(s)) {
+        if stack.empty || stack.peek() == s { return false }
+        else { stack.pop() }
       }
     }
-    return stack.empty && balanced
+    return stack.empty
   }
   
   /**
