@@ -1,0 +1,3 @@
+# expect: Error (l, c): Unexpected character.
+# expect: Error (l,c) 'b': Expect ')' after arguments.
+foo(a | b);

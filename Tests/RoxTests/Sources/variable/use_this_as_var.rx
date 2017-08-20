@@ -1,0 +1,2 @@
+# expect: Error (l,c) at 'this': Expect variable name.
+var this = "value";

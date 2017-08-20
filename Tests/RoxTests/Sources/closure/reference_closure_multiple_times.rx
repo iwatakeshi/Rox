@@ -1,0 +1,14 @@
+var f;
+
+{
+  var a = "a";
+  func f_() {
+    print a;
+    print a;
+  }
+  f = f_;
+}
+
+f();
+# expect: a
+# expect: a

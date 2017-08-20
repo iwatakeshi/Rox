@@ -34,6 +34,15 @@ class InterpreterTests: XCTestCase {
     XCTAssertEqual(evaluate("1.5 / 1") as! Double, 1.5)
     XCTAssertNil(evaluate("1 / 0"))
     XCTAssertNil(evaluate("1.5 / 0"))
+
+    // Conditions
+    XCTAssertEqual(evaluate("true == true") as! Bool, true)
+    XCTAssertEqual(evaluate("false == false") as! Bool, true)
+    XCTAssertEqual(evaluate("true == false") as! Bool, false)
+    XCTAssertEqual(evaluate("false == true") as! Bool, false)
+    XCTAssertEqual(evaluate("false != false") as! Bool, false)
+    XCTAssertEqual(evaluate("false != true") as! Bool, true)
+    XCTAssertEqual(evaluate("true == 1 > 2") as! Bool, false)
     
     // Strings
     XCTAssertEqual(evaluate("\"Hello\" + \" world!\"") as! String, "Hello world!")

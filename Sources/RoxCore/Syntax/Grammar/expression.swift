@@ -32,7 +32,7 @@ public class Expression {
     }
     
     public override func accept(visitor: ExpressionVisitor) throws -> Any? {
-      return try visitor.visit(expression: self)!
+      return try visitor.visit(expression: self)
     }
   }
   
@@ -64,20 +64,20 @@ public class Expression {
   }
   
   public class Literal: Expression {
-    private(set) var value: Any
+    private(set) var value: Any?
     public init(_ value: Any?) {
-      self.value = value == nil ? "null" : value!
+      self.value = value
     }
     
     public override func accept(visitor: ExpressionVisitor) throws -> Any? {
-      return try visitor.visit(expression: self)!
+      return try visitor.visit(expression: self)
     }
     
   }
   
   public class Logical: Binary {
     public override func accept(visitor: ExpressionVisitor) throws -> Any? {
-      return try visitor.visit(expression: self)!
+      return try visitor.visit(expression: self)
     }
   }
   
@@ -88,7 +88,7 @@ public class Expression {
     }
     
     public override func accept(visitor: ExpressionVisitor) throws -> Any? {
-      return try visitor.visit(expression: self)!
+      return try visitor.visit(expression: self)
     }
   }
   
@@ -107,7 +107,7 @@ public class Expression {
     }
     
     public override func accept(visitor: ExpressionVisitor) throws -> Any? {
-      return try visitor.visit(expression: self)!
+      return try visitor.visit(expression: self)
     }
   }
   
@@ -117,7 +117,7 @@ public class Expression {
       self.name = name
     }
     public override func accept(visitor: ExpressionVisitor) throws -> Any? {
-      return try visitor.visit(expression: self)!
+      return try visitor.visit(expression: self)
     }
   }
   

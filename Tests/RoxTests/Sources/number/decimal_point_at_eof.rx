@@ -1,0 +1,3 @@
+# !skip
+# expect: Error (l,c) at end: Expect property name after '.'.
+123.

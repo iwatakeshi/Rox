@@ -1,0 +1,3 @@
+# expect: Error (l,c) at '123': Expect '{' before function body.
+# expect: Error (l,c) at end: Expect '}' after block.
+func f() 123;

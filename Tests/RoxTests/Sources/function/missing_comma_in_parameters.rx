@@ -1,0 +1,2 @@
+# expect: Error (l,c) at 'c': Expect ')' after parameters.
+func foo(a, b c, d, e, f) {}

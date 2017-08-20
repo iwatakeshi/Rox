@@ -50,7 +50,9 @@ public class Parser {
     var statements = [Statement]()
     while !isEOF {
       do {
-        statements.append(try parseDeclarationStatement())
+        if let statement = try parseDeclarationStatement() {
+          statements.append(statement)
+        }
       } catch {
         break
       }
@@ -58,24 +60,23 @@ public class Parser {
     return statements
   }
   
-  public func parseRepl() -> Any? {
+  public func parseRepl() throws -> Any? {
     var statements = [Statement]()
       allowExpression = true
-      while !isEOF {
-        do {
-          statements.append(try parseDeclarationStatement())
-          let last = statements[statements.count - 1]
-          if foundExpression {
-            return (last as! Statement.Expression).expression
-          } else if last is Statement.Expression {
-            return (last as! Statement.Expression).expression
+      do {
+        while !isEOF {
+          if let statement = try parseDeclarationStatement() {
+            statements.append(statement)
           }
-        } catch {
-          break
+        if foundExpression {
+          let last = statements[statements.count - 1]
+          return (last as! Statement.Expression).expression
         }
-        allowExpression = false
+          allowExpression = false
+        }
       }
-      return statements
+        
+    return statements
   }
 
   /**
@@ -83,7 +84,7 @@ public class Parser {
    
    - Returns: The parse tree
    */
-  public func parse(_ tokens: [Token]) -> [Statement] {
+  public func parse(_ tokens: [Token]) throws -> [Statement] {
     self.tokens = tokens
     self.position = 0
     return parse()
@@ -132,51 +133,51 @@ public class Parser {
   }
   
   private func parseEqualityExpression() throws -> Expression {
-    var expression = try parseRangeExpression()
+    var expression = try parseComparisonExpression()
     while match(.Operator("!="), .Operator("==")) {
       let `operator` = previous()
-      let right = try parseRangeExpression()
+      let right = try parseComparisonExpression()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
   }
   
-  private func parseRangeExpression() throws -> Expression {
-    let expression = try parseComparisonExpression()
-    if match(.Operator("..")) {
-      let `operator` = previous()
-      let right = try parseComparisonExpression()
-      return Expression.Range(expression, `operator`, right)
-    }
-    return expression
-  }
+//  private func parseRangeExpression() throws -> Expression {
+//    let expression = try parseComparisonExpression()
+//    if match(.Operator("..")) {
+//      let `operator` = previous()
+//      let right = try parseComparisonExpression()
+//      return Expression.Range(expression, `operator`, right)
+//    }
+//    return expression
+//  }
   
   private func parseComparisonExpression() throws -> Expression {
-    var expression = try parseAdditionExpression()
+    var expression = try parseTermExpression()
     while match(.Operator(">"), .Operator(">="), .Operator("<"), .Operator("<=")) {
       let `operator` = previous()
-      let right = try parseAdditionExpression()
+      let right = try parseTermExpression()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
   }
 
-  private func parseAdditionExpression() throws -> Expression {
-    var expression = try parseMultiplicationExpression()
+  private func parseTermExpression() throws -> Expression {
+    var expression = try parseFactorExpression()
 
     while match(.Operator("-"), .Operator("+")) {
       let `operator` = previous()
-      let right = try parseMultiplicationExpression()
+      let right = try parseFactorExpression()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
   }
 
-  private func parseMultiplicationExpression() throws -> Expression {
+  private func parseFactorExpression() throws -> Expression {
     var expression = try parseUnaryExpression()
     while match(.Operator("/"), .Operator("*")) {
       let `operator` = previous()
-      let right = try parseMultiplicationExpression()
+      let right = try parseUnaryExpression()
       expression = Expression.Binary(expression, `operator`, right)
     }
     return expression
@@ -226,30 +227,28 @@ public class Parser {
 
   /* Statements */
   
-  private func parseDeclarationStatement() throws -> Statement {
+  private func parseDeclarationStatement() throws -> Statement? {
     do {
       if check(.Reserved("func")) && check(.Identifier, 1) {
         try consume(.Reserved("func"), "")
         return try parseFunctionStatement("function")
       }
       if match(.Reserved("var")) { return try parseVariableStatement() }
+      return try parseStatement()
     } catch RoxException.RoxParserException(.error(_, _)) {
       synchronize()
     }
-    return try parseStatement()
+    return nil
   }
   
   private func parseStatement() throws -> Statement {
     do {
       if match(.Punctuation("{")) { return try Statement.Block(parseBlockStatement()) }
-      if match(.Reserved("for")) { return try parseForStatement() }
+//      if match(.Reserved("for")) { return try parseForStatement() }
       if match(.Reserved("if")) { return try parseIfStatement() }
       if match(.Reserved("print")) { return try parsePrintStatement() }
       if match(.Reserved("return")) { return try parseReturnStatement() }
       if match(.Reserved("while")) { return try parseWhileStatement() }
-      return try parseExpressionStatement()
-    } catch RoxException.RoxParserException(.error(_, _)) {
-
     }
     return try parseExpressionStatement()
   }
@@ -257,7 +256,7 @@ public class Parser {
   private func parseBlockStatement() throws -> [Statement] {
     var statements = [Statement]()
     while !check(.Punctuation("}")) && !isEOF {
-      statements.append(try parseDeclarationStatement())
+      statements.append(try parseDeclarationStatement()!)
     }
     try consume(.Punctuation("}"), "Expect '}' after block")
     return statements
@@ -265,17 +264,16 @@ public class Parser {
   
   private func parseExpressionStatement() throws -> Statement {
     let value = try parseExpression()
+    try consume(.Punctuation(";"), "Expect ';' after expression", false)
     if allowExpression && isEOF {
       foundExpression = true
     }
-    try consume(.Punctuation(";"), "Expect ';' after expression", false)
     return Statement.Expression(value)
   }
   
   private func parseFunctionStatement(_ kind: String) throws -> Statement.Function {
     let name: Token = try consume(.Identifier, "Expect identifier after \(kind) name")
-    let function = try parseFunctionBody(kind)
-    return Statement.Function(name, function)
+    return Statement.Function(name, try parseFunctionBody(kind))
   }
   
   private func parseForStatement() throws -> Statement {
@@ -315,13 +313,15 @@ public class Parser {
   private func parseReturnStatement() throws -> Statement {
     let keyword = previous()
     var value: Expression?
-    if match(.Punctuation(";")) {}
-    value = try parseExpression()
+    if !check(.Punctuation(";")) {
+      value = try parseExpression()
+    }
+    try consume(.Punctuation(";"), "Expect ';' after expression", false)
     return Statement.Return(keyword, value)
   }
   
   public func parseVariableStatement() throws -> Statement {
-    let name = try consume(.Identifier, "Expect identifier after 'var' declaration")
+    let name = try consume(.Identifier, "Expect variable name")
     var value: Expression?
     
     if match(.Operator("=")) {
@@ -421,17 +421,17 @@ public class Parser {
   
   private func parseFunctionBody(_ kind: String) throws -> Expression.Function {
     var parameters = [Token]()
-    try consume(.Punctuation("("), "Expect '(' after \(kind) name")
+    
+    try consume(.Punctuation(("(")), "Expect '(' after \(kind) name")
     if !check(.Punctuation(")")) {
       repeat {
-        parameters.append(try consume(.Identifier, "Expect parameter name"))
+        parameters.append(try consume(.Identifier, "Expect paramater name"))
       } while match(.Punctuation(","))
     }
-    try consume(.Punctuation(")"), "Expect ')' after parameters")
     
-    try consume(.Punctuation("{"), "Expect '{' before \(kind) body")
+    try consume(.Punctuation((")")), "Expect ')' after parameters")
+    try consume(.Punctuation(("{")), "Expect '{' before \(kind) body")
     
-    let body = try parseBlockStatement()
-    return Expression.Function(parameters, body)
+    return Expression.Function(parameters, try parseBlockStatement())
   }
 }

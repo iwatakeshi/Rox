@@ -31,7 +31,7 @@ extension RoxFunction: CustomStringConvertible{
   /// The conversion of `p` to a string in the assignment to `s` uses the
   /// `Point` type's `description` property.
   var description: String {
-    return "<func \(name == nil ? "" : name!)>"
+    return "<func \(self.name == nil ? "" : self.name!)>"
   }
 
   

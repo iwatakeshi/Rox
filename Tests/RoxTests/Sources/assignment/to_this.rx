@@ -1,0 +1,8 @@
+# !skip
+class Foo {
+  Foo() {
+    this = "value"; # expect: Error (l,c) at '=': Invalid assignment target.
+  }
+}
+
+Foo();

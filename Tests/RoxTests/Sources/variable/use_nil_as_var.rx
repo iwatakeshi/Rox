@@ -1,0 +1,2 @@
+# expect: Error (l,c) at 'null': Expect variable name.
+var null = "value";

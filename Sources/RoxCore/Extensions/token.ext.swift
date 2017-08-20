@@ -36,3 +36,9 @@ extension Token : Equatable {
     return left.type == right.type && left.location == right.location;
   }
 }
+
+extension Token : CustomStringConvertible {
+  public var description: String {
+    return "<token { \n\ttype: \(self.type), \n\tlexeme:\(self.lexeme), \n\tliteral:\(self.literal ?? "")\n }>"
+  }
+}

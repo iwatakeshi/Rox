@@ -1,0 +1,2 @@
+# expect: Error (l,c) 'class': Expect expression.
+if (true) class Foo {}

@@ -76,7 +76,7 @@ public class Rox {
         if let line = readLine() {
           lines.append("\(line)\n")
           if opening.contains(line.last) { dots = dots + 1 }
-          else if closing.contains(line.last) { dots = dots - 1 }
+          else if closing.contains(line.last) { dots = dots > 0 ? dots - 1 : 0 }
         }
       } while (!isBalanced(lines))
     }
@@ -119,7 +119,7 @@ public class Rox {
   public static func run(_ source: String) throws {
     let scanner = Lexer(source)
     let parser = Parser(scanner.scan())
-    let syntax = parser.parseRepl()
+    let syntax = try parser.parseRepl()
     if errored { return }
     
     if syntax is [Statement] {
@@ -138,7 +138,7 @@ public class Rox {
     
     switch type {
     case .RoxRuntimeException(.error(let token, let message)):
-      print("error (\(token.location.line),\(token.location.column)): \(message)")
+      print("Error (\(token.location.line),\(token.location.column)): \(message).")
       runtimeErrored = true
       break
     case .RoxParserException(.error(let token, let message)):
@@ -150,7 +150,7 @@ public class Rox {
   }
   
   public static func error(_ location: Location, _ message: String) {
-    report(location, "", message)
+    report(location, message)
   }
   
   public static func error(_ token: Token, _ message: String) {
@@ -161,8 +161,13 @@ public class Rox {
     }
   }
   
+public static func report(_ location: Location, _ message: String) {
+    print(" Error (\(location.line),\(location.column)): \(message).")
+    errored = true
+  }
+
   public static func report(_ location: Location, _ origin: String, _ message: String) {
-    print("error (\(location.line),\(location.column)): \(origin): \(message)")
+    print(" Error (\(location.line),\(location.column)) \(origin): \(message).")
     errored = true
   }
 }

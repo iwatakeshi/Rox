@@ -1,0 +1,11 @@
+# !skip
+class Foo {
+  init() {
+    func init() {
+      return "bar";
+    }
+    print init(); # expect: bar
+  }
+}
+
+print Foo(); # expect: Foo instance

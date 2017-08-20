@@ -1,0 +1,8 @@
+# !skip
+class Base {
+  foo() {
+    super.doesNotExist; # expect: Error (l,c) 'super': Cannot use 'super' in a class with no superclass.
+  }
+}
+
+Base().foo();

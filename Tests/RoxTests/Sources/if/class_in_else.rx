@@ -1,0 +1,3 @@
+# !skip
+# expect: Error (l,c) 'class': Expect expression.
+if (true) "ok"; else class Foo {}
