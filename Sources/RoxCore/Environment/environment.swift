@@ -33,7 +33,7 @@ public class Environment {
       return try enclosing?.get(name) ?? "null"
     }
     
-    throw RoxRuntimeException.error(name, "Undefined variable \"\(name.lexeme)\"")
+    throw RoxRuntimeException.error(name, "Undefined variable '\(name.lexeme)'")
   }
 
   public func assign(_ name: Token, _ value: Any?) throws {
@@ -47,7 +47,7 @@ public class Environment {
       return
     }
     
-    throw RoxRuntimeException.error(name, "Undefined variable \"\(name.lexeme)\"")
+    throw RoxRuntimeException.error(name, "Undefined variable '\(name.lexeme)\'")
   }
   
 }

@@ -1,0 +1,3 @@
+func foo(a) {
+  var a; # expect: Error (l,c) 'a': Variable with this name already declared in this scope.
+}

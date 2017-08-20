@@ -17,11 +17,24 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   private(set) var environment: Environment
   
   public init() {
-    environment = globals
-    
-    globals.define("clock", RoxFunction("clock", { (arg1: Interpreter, arg2: [Any?]) -> Any? in
+    globals.define("clock", RoxCallable("clock", { (arg1: Interpreter, arg2: [Any?]) -> Any? in
       return Date().millisecondsSince1970
     }))
+    
+    environment = globals
+  }
+  
+  @discardableResult
+  public func interpret(_ syntax: Any?) throws -> Any? {
+    if syntax is Expression {
+      return try evaluate(syntax as! Expression) ?? nil
+    }
+    if syntax is [Statement] {
+      for statement in (syntax as! [Statement]) {
+        try execute(statement)
+      }
+    }
+    return nil
   }
   
   public func interpret(_ expression: Expression) -> Any? {
@@ -67,31 +80,53 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       if isNumber(left) && isNumber(right) {
         return try evaluateNumber(expression.operator, left, right)
       }
+      if (left is String || right is String) && (isNumber(left) || isNumber(right)) {
+        return castString(left) + castString(right)
+      }
       break
     case .Operator("-"): fallthrough
     case .Operator("/"): fallthrough
     case .Operator("*"):
-      if (!isNumber(left) || !isNumber(right)) { break }
+      try checkNumberOperands(expression.operator, left, right)
         return try evaluateNumber(expression.operator, left, right)
     case .Operator("=="):
-      if (!isNumber(left) || !isNumber(right)) { break }
-      return (castNumber(left) == castNumber(right))
+      if left is String && right is String {
+        return castString(left) == castString(right)
+      }
+      if (isNumber(left) && isNumber(right)) {
+        return (castNumber(left) == castNumber(right))
+      }
+      if (left is Bool && right is Bool) {
+        return castBool(left) == castBool(right)
+      }
+      return false
+    case .Operator("!="):
+      if left is String && right is String {
+        return castString(left) != castString(right)
+      }
+      if (isNumber(left) && isNumber(right)) {
+        return (castNumber(left) != castNumber(right))
+      }
+      if (left is Bool && right is Bool) {
+        return castBool(left) != castBool(right)
+      }
+      return true
     case .Operator(">"):
-      if (!isNumber(left) || !isNumber(right)) { break }
-      return (castNumber(left) > castNumber(right))
+      try checkNumberOperands(expression.operator, left, right)
+        return (castNumber(left) > castNumber(right))
     case .Operator(">="):
-      if (!isNumber(left) || !isNumber(right)) { break }
+      try checkNumberOperands(expression.operator, left, right)
       return (castNumber(left) >= castNumber(right))
     case .Operator("<"):
-      if (!isNumber(left) || !isNumber(right)) { break }
+      try checkNumberOperands(expression.operator, left, right)
       return (castNumber(left) < castNumber(right))
     case .Operator("<="):
-      if (!isNumber(left) || !isNumber(right)) { break }
+      try checkNumberOperands(expression.operator, left, right)
       return (castNumber(left) <= castNumber(right))
       
     default: break;
     }
-    throw RoxRuntimeException.error(expression.operator, "Operands must be two numbers or two strings.")
+    throw RoxRuntimeException.error(expression.operator, "Operands must be two numbers or two strings")
   }
   
   public func visit(expression: Expression.Call) throws -> Any? {
@@ -102,35 +137,24 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       arguments.append(try evaluate(argument))
     }
     
-    if !(callee is RoxCallable) {
-      throw RoxRuntimeException.error(expression.parenthesis, "Can only call functions and classes.")
+    if !(callee is RoxCallableType) {
+      throw RoxRuntimeException.error(expression.parenthesis, "Can only call functions and classes")
     }
     
-    let function = callee as! RoxCallable
+    let function = callee as! RoxCallableType
     
     if (arguments.count != function.arity) {
       throw RoxRuntimeException.error(expression.parenthesis, "Expected \(function.arity) arguments but got \(arguments.count)")
     }
     
-    return try function.call(self, arguments)
+    if let value = try function.call!(self, arguments) {
+      return value
+    }
+    return nil
   }
   
   public func visit(expression: Expression.Function) throws -> Any? {
-    let closure = environment
-    let function = RoxFunction(expression.parameters.count, { (a: Interpreter, b: [Any?]) in
-      let local = Environment(closure)
-      for (index, parameter) in expression.parameters.enumerated() {
-        local.define(parameter.lexeme, b[index])
-      }
-      do {
-        try a.execute(expression.body, local)
-      } catch RoxReturnException.return(let value) {
-        return value
-      } catch {
-        
-      }
-      return nil
-    })
+    let function = RoxFunction(expression, environment)
     return function
   }
   
@@ -171,14 +195,14 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       }
       
     }
-    throw RoxRuntimeException.error(expression.operator, "Operands must be two numbers of the same type")
+    throw RoxRuntimeException.error(expression.operator, "Operands must be numbers of the same type")
   }
   
   public func visit(expression: Expression.Unary) throws -> Any? {
     let right = try evaluate(expression.right)
     switch expression.operator.type {
     case .Operator("-"):
-      try checkNumberOperand(expression.operator, operand: right)
+      try checkNumberOperand(expression.operator, right)
       if right is Double {
         return (-(right as! Double))
       } else { return (-(right as! Int)) }
@@ -217,7 +241,7 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   }
   
   public func visit(statement: Statement.Function) throws {
-    let function: RoxFunction = try evaluate(statement.function) as! RoxFunction
+    let function = RoxFunction(statement.name.lexeme, statement.function, environment)
     environment.define(statement.name.lexeme, function)
   }
   
@@ -231,15 +255,14 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   
   public func visit(statement: Statement.Print) throws {
     let value = try evaluate(statement.expression)
-    if (value != nil) {
-      print(value!)
-    }
+    print(value ?? "null")
   }
   
   public func visit(statement: Statement.Return) throws {
     var value: Any?
     if (statement.value != nil) {
       value = try evaluate(statement.value!)
+//      print(value ?? "")
     }
     throw RoxReturnException.return(value)
   }
@@ -264,24 +287,23 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   
   public func execute(_ block: [Statement], _ environment: Environment) throws {
     let previous = self.environment
+    defer {
+      self.environment = previous
+    }
     do  {
       self.environment = environment
       for (_, statement) in block.enumerated() {
         try execute(statement)
       }
-    } catch (let exception as RoxReturnException) {
-      throw exception
-    } catch {
-      self.environment = previous
     }
+    
   }
   
   /* Helpers */
   
   private func isTruthy(_ value: Any?) -> Bool {
     if value == nil { return false }
-    if value is Bool { return Bool(value) }
-    return true
+    return castBool(value)
   }
   
   private func isEqual(_ a: Any?, _ b: Any?) -> Bool {
@@ -343,17 +365,34 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     return number as! Double
   }
   
+  private func castBool(_ value: Any?) -> Bool {
+    if value is Bool { return value as! Bool }
+    return String(describing: value ?? "null").contains("true")
+  }
+  
+  private func castString(_ value: Any?) -> String {
+    if value == nil { return "" }
+    if value is Int { return String(value as! Int) }
+    if value is Double { return String(value as! Double) }
+    
+    return value as! String
+  }
+  
   private func isNumber(_ number: Any?) -> Bool {
     if number == nil { return false }
     return number is Int || number is Double
   }
   
-  private func checkNumberOperand(_ `operator`: Token, operand: Any?) throws {
-    if operand is Double || operand is Int { return }
-    throw RoxRuntimeException.error(`operator`, operand as! String)
+  private func isNumber(_ left: Any?, _ right: Any?) -> Bool {
+    return isNumber(left) && isNumber(right)
   }
   
-  private func checkNumberOperands(_ `operator`: Token, left: Any?, right: Any?) throws {
+  private func checkNumberOperand(_ `operator`: Token, _ operand: Any?) throws {
+    if operand is Double || operand is Int { return }
+    throw RoxRuntimeException.error(`operator`, "Operand must be a number")
+  }
+  
+  private func checkNumberOperands(_ `operator`: Token, _ left: Any?, _ right: Any?) throws {
     if (left is Int || left is Double) && (right is Int || right is Double) { return }
     throw RoxRuntimeException.error(`operator`, "Operands must be numbers")
   }

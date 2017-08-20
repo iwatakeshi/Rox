@@ -1,0 +1,1 @@
+return "wat"; # expect: Error (l,c) 'return': Cannot return from top-level code.

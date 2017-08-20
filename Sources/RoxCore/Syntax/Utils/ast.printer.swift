@@ -30,7 +30,7 @@ public class ASTPrinter: ExpressionVisitor {
   }
   
   public func visit(expression: Expression.Literal) throws -> Any? {
-    return String(describing: expression.value) 
+    return expression.value
   }
   public func visit(expression: Expression.Logical) throws -> Any? {
     return try parenthesize(expression.operator.lexeme, expression.left, expression.right)
@@ -56,13 +56,22 @@ public class ASTPrinter: ExpressionVisitor {
     var str = "(" + name
     for expression in expressions {
       str.append(" ")
-      str.append(try expression.accept(visitor: self) as! String)
+      str.append(castString(try expression.accept(visitor: self)))
     }
     str.append(")")
     return str
   }
   
   public func print(_ expression: Expression?) throws -> String {
-    return expression != nil ? try expression!.accept(visitor: self) as! String : ""
+    return expression != nil ? castString(try expression!.accept(visitor: self)) : ""
+  }
+  
+  public func castString(_ value: Any?) -> String {
+    if value == nil { return "null" }
+    if value is String { return value as! String }
+    if value is Int { return "\(value as! Int)" }
+    if value is Double { return "\(value as! Double)" }
+    if value is Bool { return "\(value as! Bool)" }
+    return ""
   }
 }

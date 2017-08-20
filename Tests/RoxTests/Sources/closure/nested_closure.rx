@@ -1,0 +1,25 @@
+var f;
+
+func f1() {
+  var a = "a";
+  func f2() {
+    var b = "b";
+    func f3() {
+      var c = "c";
+      func f4() {
+        print a;
+        print b;
+        print c;
+      }
+      f = f4;
+    }
+    f3();
+  }
+  f2();
+}
+f1();
+
+f();
+# expect: a
+# expect: b
+# expect: c

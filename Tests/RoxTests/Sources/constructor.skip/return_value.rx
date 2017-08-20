@@ -1,0 +1,6 @@
+# !skip
+class Foo {
+  init() {
+    return "result"; # expect: Error (l,c) 'return': Cannot return a value from an initializer.
+  }
+}

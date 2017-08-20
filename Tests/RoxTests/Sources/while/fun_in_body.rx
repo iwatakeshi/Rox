@@ -1,0 +1,2 @@
+# expect: Error (l,c) at 'func': Expect expression.
+while (true) func foo() {}

@@ -39,7 +39,7 @@ class ParserTests: XCTestCase {
     XCTAssertEqual(parse("1 / 1"), "(/ 1 1)")
     XCTAssertEqual(parse("1 * 2 + 1"), "(+ (* 1 2) 1)")
     XCTAssertEqual(parse("1 * (2 + 1)"), "(* 1 (group (+ 2 1)))")
-    XCTAssertEqual(parse("(1 + 1) * 1 / 2 + (4 - 1)"), "(+ (* (group (+ 1 1)) (/ 1 2)) (group (- 4 1)))")
+    XCTAssertEqual(parse("(5 - (3 - 1)) + -1"), "(+ (group (- 5 (group (- 3 1)))) (- 1))")
   }
   
   func testParenthesized() {
@@ -59,6 +59,11 @@ class ParserTests: XCTestCase {
     XCTAssertEqual(parse("null"), "null")
     XCTAssertEqual(parse("\"Hello world\""), "Hello world")
     
+  }
+  
+  func testExpression() {
+    //(5 - (3 - 1)) + -1
+    XCTAssertEqual(parse("(5 - (3 - 1)) + -1"), "(+ (group (- 5 (group (- 3 1)))) (- 1))")
   }
     
   func testPerformanceExample() {

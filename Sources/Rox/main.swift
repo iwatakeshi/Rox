@@ -43,11 +43,10 @@ private func read(path: String) -> URL {
 
 
 let arguments = CommandLine.arguments
-
 if arguments.count > 2 {
   print("Usage: rox [script]")
 } else if arguments.count == 2 {
-  Rox.run(read(path: arguments[0]))
+  Rox.run(read(path: arguments[1]))
 } else {
   Rox.repl()
 }

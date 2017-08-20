@@ -1,0 +1,14 @@
+# !skip
+var f;
+
+class Foo {
+  method(param) {
+    func f_() {
+      print param;
+    }
+    f = f_;
+  }
+}
+
+Foo().method("param");
+f(); # expect: param
