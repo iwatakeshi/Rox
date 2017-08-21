@@ -91,5 +91,5 @@ primary                   → "true" | "false" | "null"
 |-----------|------------------------|
 | `null`	  |        `nil`           |
 | `boolean`	|        `Bool`          |
-| `number`	|        `Double`        |
+| `number`	|        `RoxNumber`     |
 | `string`	|        `String`        |
