@@ -77,7 +77,7 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       if left is String && right is String {
         return (left as! String) + (right as! String)
       }
-      if isNumber(left) && isNumber(right) {
+      if left is RoxNumber && right is RoxNumber {
         return try evaluateNumber(expression.operator, left, right)
       }
       if (left is String || right is String) && (isNumber(left) || isNumber(right)) {
