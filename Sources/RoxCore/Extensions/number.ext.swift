@@ -8,9 +8,26 @@
 
 import Foundation
 
-extension Double : RoxNumberType { }
+extension Double : RoxNumberType {
+  init(_ number: RoxNumber) {
+    if number.value is Int {
+      self.init(Double(number.value as! Int))
+    } else {
+      self.init(number.value as! Double)
+    }
+  }
+}
 extension Float  : RoxNumberType { }
-extension Int    : RoxNumberType { }
+extension Int    : RoxNumberType {
+  init(_ number: RoxNumber) {
+    if number.value is Int {
+      self.init(number.value as! Int)
+    }
+    else {
+      self.init(Int(number.value as! Double))
+    }
+  }
+}
 extension Int8   : RoxNumberType { }
 extension Int16  : RoxNumberType { }
 extension Int32  : RoxNumberType { }

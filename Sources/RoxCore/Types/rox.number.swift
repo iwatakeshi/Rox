@@ -15,13 +15,12 @@ public protocol RoxNumberType {
   static func -(lhs: Self, rhs: Self) -> Self
   static func *(lhs: Self, rhs: Self) -> Self
   static func /(lhs: Self, rhs: Self) -> Self
-  static func %(lhs: Self, rhs: Self) -> Self
 }
 
 
 public class RoxNumber: RoxNumberType, CustomStringConvertible, CustomDebugStringConvertible, Equatable {
 
-  private(set) var value: Any = 0
+  public private(set) var value: Any = 0
   public var description: String { return "\(value)" }
   public var debugDescription: String { return "\(value)" }
   
