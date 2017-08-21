@@ -41,7 +41,6 @@ private func read(path: String) -> URL {
 // let expression = binary(left, op, right)
 
 
-
 let arguments = CommandLine.arguments
 if arguments.count > 2 {
   print("Usage: rox [script]")

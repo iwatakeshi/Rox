@@ -59,7 +59,7 @@ public class Lexer {
       case "{": addToken(.Punctuation("{")); break
       case "}": addToken(.Punctuation("}")); break
       case ",": addToken(.Punctuation(",")); break
-      case ".": addToken(match(".") ? .Operator("..") : .Punctuation(".")); break
+      case ".": scanPeriodOperator(); break
       case ";": addToken(.Punctuation(";")); break
       case "#": ScanComment(); break
       case "-": addToken(.Operator("-")); break
@@ -187,6 +187,18 @@ public class Lexer {
     if Token.isReserved(lexeme) { type = .Reserved(lexeme) }
     if Token.isOperator(lexeme) { type = .Operator(lexeme) }
     addToken(type)
+  }
+  
+  private func scanPeriodOperator() {
+    while match(".") {}
+    let lexeme = source[start..<position]
+    switch lexeme {
+    case "...": addToken(.Operator(lexeme)); break
+    case ".": addToken(.Operator(lexeme)); break
+    default:
+      Rox.error(endLocation, "Unexpected character '\(lexeme)'")
+      break
+    }
   }
   
 }

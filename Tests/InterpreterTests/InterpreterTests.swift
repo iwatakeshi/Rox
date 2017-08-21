@@ -18,7 +18,11 @@ class InterpreterTests: XCTestCase {
   private func evaluate(_ source: String) -> Any? {
     do {
       let expression = parser.parse(lexer.scan(source), type: .Expression) as? Expression;
-      return try interpreter.evaluate(expression!)
+      let value = try interpreter.evaluate(expression!)
+      if value is RoxNumber {
+        return (value as! RoxNumber).value
+      }
+      return value
     } catch {
       return nil
     }
