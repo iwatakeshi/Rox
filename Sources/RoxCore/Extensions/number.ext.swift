@@ -1,5 +1,5 @@
 //
-//  rox.number.ext.swift
+//  number.ext.swift
 //  Rox
 //
 //  Created by Takeshi Iwana on 8/20/17.
@@ -7,7 +7,6 @@
 //
 
 import Foundation
-
 
 extension Double : RoxNumberType { }
 extension Float  : RoxNumberType { }

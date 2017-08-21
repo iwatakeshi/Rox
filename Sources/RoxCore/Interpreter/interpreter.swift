@@ -77,10 +77,10 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       if left is String && right is String {
         return (left as! String) + (right as! String)
       }
-      if left is RoxNumber && right is RoxNumber {
+      if left is RoxNumberType && right is RoxNumberType {
         return try evaluateNumber(expression.operator, left, right)
       }
-      if (left is String || right is String) && (isNumber(left) || isNumber(right)) {
+      if (left is String || right is String) && (left is RoxNumberType || right is RoxNumberType) {
         return castString(left) + castString(right)
       }
       break
@@ -93,10 +93,10 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       if left is String && right is String {
         return castString(left) == castString(right)
       }
-      if (isNumber(left) && isNumber(right)) {
-        return (castNumber(left) == castNumber(right))
+      if left is RoxNumberType && right is RoxNumberType {
+        return RoxNumber(left!) == RoxNumber(right!)
       }
-      if (left is Bool && right is Bool) {
+      if left is Bool && right is Bool {
         return castBool(left) == castBool(right)
       }
       return false
@@ -104,8 +104,8 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       if left is String && right is String {
         return castString(left) != castString(right)
       }
-      if (isNumber(left) && isNumber(right)) {
-        return (castNumber(left) != castNumber(right))
+      if (left is RoxNumberType && right is RoxNumberType) {
+        return RoxNumber(left!) != RoxNumber(right!)
       }
       if (left is Bool && right is Bool) {
         return castBool(left) != castBool(right)
@@ -113,16 +113,16 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       return true
     case .Operator(">"):
       try checkNumberOperands(expression.operator, left, right)
-        return (castNumber(left) > castNumber(right))
+        return RoxNumber(left!) > RoxNumber(right!)
     case .Operator(">="):
       try checkNumberOperands(expression.operator, left, right)
-      return (castNumber(left) >= castNumber(right))
+      return RoxNumber(left!) >= RoxNumber(right!)
     case .Operator("<"):
       try checkNumberOperands(expression.operator, left, right)
-      return (castNumber(left) < castNumber(right))
+      return RoxNumber(left!) < RoxNumber(right!)
     case .Operator("<="):
       try checkNumberOperands(expression.operator, left, right)
-      return (castNumber(left) <= castNumber(right))
+      return RoxNumber(left!) <= RoxNumber(right!)
       
     default: break;
     }
@@ -179,7 +179,7 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   public func visit(expression: Expression.Range) throws -> Any? {
     let left = try evaluate(expression.left)
     let right = try evaluate(expression.right)
-    if isNumber(left) && isNumber(right) {
+    if left is RoxNumberType && right is RoxNumberType {
       if left is Double && right is Double {
         let a = left as! Double
         let b = right as! Double
@@ -333,36 +333,18 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   private func evaluateNumber(_ `operator`: Token, _ left: Any?, _ right: Any?) throws -> Any? {
     switch `operator`.type {
     case .Operator("+"):
-      if left is Int && right is Int {
-        return (left as! Int) + (right as! Int)
-      }
-      else { return castNumber(left) + castNumber(right) }
+      return RoxNumber(left!) + RoxNumber(right!)
     case .Operator("-"):
-      if left is Int && right is Int {
-        return (left as! Int) - (right as! Int)
-      }
-      else { return castNumber(left) - castNumber(right) }
+      return RoxNumber(left!) - RoxNumber(right!)
     case .Operator("*"):
-      if left is Int && right is Int {
-        return (left as! Int) * (right as! Int)
-      }
-      else { return castNumber(left) * castNumber(right) }
+      return RoxNumber(left!) * RoxNumber(right!)
     case .Operator("/"):
-      if castNumber(right) == Double(0) {
+      if RoxNumber(right!) == 0 {
         throw RoxRuntimeException.error(`operator`, "Cannot divide by 0")
       }
-      if left is Int && right is Int {
-        return (left as! Int) / (right as! Int)
-      }
-      else { return castNumber(left) / castNumber(right) }
+      return RoxNumber(left!) / RoxNumber(right!)
     default: return nil
     }
-  }
-  
-  private func castNumber(_ number: Any?) -> Double {
-    if number == nil { return 0 }
-    if number is Int { return Double(number as! Int) }
-    return number as! Double
   }
   
   private func castBool(_ value: Any?) -> Bool {
@@ -378,22 +360,13 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     return value as! String
   }
   
-  private func isNumber(_ number: Any?) -> Bool {
-    if number == nil { return false }
-    return number is Int || number is Double
-  }
-  
-  private func isNumber(_ left: Any?, _ right: Any?) -> Bool {
-    return isNumber(left) && isNumber(right)
-  }
-  
   private func checkNumberOperand(_ `operator`: Token, _ operand: Any?) throws {
-    if operand is Double || operand is Int { return }
+    if operand is RoxNumberType { return }
     throw RoxRuntimeException.error(`operator`, "Operand must be a number")
   }
   
   private func checkNumberOperands(_ `operator`: Token, _ left: Any?, _ right: Any?) throws {
-    if (left is Int || left is Double) && (right is Int || right is Double) { return }
+    if left is RoxNumberType && right is RoxNumberType { return }
     throw RoxRuntimeException.error(`operator`, "Operands must be numbers")
   }
   
