@@ -47,25 +47,173 @@ public class RoxNumber: RoxNumberType, CustomStringConvertible, CustomDebugStrin
   
   /* Arithmetic */
   
+  // +
+  
   public static func +(lhs: RoxNumber, rhs: RoxNumber) -> Self {
     return self.init(add(a: lhs, b: rhs))
   }
+  
+  public static func +(lhs: RoxNumber, rhs: Int) -> Self {
+    if lhs.value is Int {
+      return self.init((lhs.value as! Int) + rhs)
+    }
+    return self.init((lhs.value as! Double) + Double(rhs))
+  }
+  
+  public static func +(lhs: Int, rhs: RoxNumber) -> Self {
+    if rhs.value is Int {
+      return self.init(lhs + (rhs.value as! Int))
+    }
+    return self.init(Double(lhs) + (rhs.value as! Double))
+  }
+  
+  public static func +(lhs: RoxNumber, rhs: Double) -> Self {
+    if lhs.value is Int {
+      return self.init(Double((lhs.value as! Int)) + rhs)
+    }
+    return self.init((lhs.value as! Double) + rhs)
+  }
+  
+  public static func +(lhs: Double, rhs: RoxNumber) -> Self {
+    if rhs.value is Int {
+      return self.init(lhs + Double((rhs.value as! Int)))
+    }
+    return self.init(lhs + (rhs.value as! Double))
+  }
+  
+  // -
   
   public static func -(lhs: RoxNumber, rhs: RoxNumber) -> Self {
     return self.init(subtract(a: lhs, b: rhs))
   }
   
+  public static func -(lhs: RoxNumber, rhs: Int) -> Self {
+    if lhs.value is Int {
+      return self.init((lhs.value as! Int) - rhs)
+    }
+    return self.init((lhs.value as! Double) - Double(rhs))
+  }
+  
+  public static func -(lhs: Int, rhs: RoxNumber) -> Self {
+    if rhs.value is Int {
+      return self.init(lhs - (rhs.value as! Int))
+    }
+    return self.init(Double(lhs) - (rhs.value as! Double))
+  }
+  
+  public static func -(lhs: RoxNumber, rhs: Double) -> Self {
+    if lhs.value is Int {
+      return self.init(Double((lhs.value as! Int)) - rhs)
+    }
+    return self.init((lhs.value as! Double) - rhs)
+  }
+  
+  public static func -(lhs: Double, rhs: RoxNumber) -> Self {
+    if rhs.value is Int {
+      return self.init(lhs - Double((rhs.value as! Int)))
+    }
+    return self.init(lhs - (rhs.value as! Double))
+  }
+  
+  // *
+  
   public static func *(lhs: RoxNumber, rhs: RoxNumber) -> Self {
     return self.init(multiply(a: lhs, b: rhs))
   }
   
+  public static func *(lhs: RoxNumber, rhs: Int) -> Self {
+    if lhs.value is Int {
+      return self.init((lhs.value as! Int) * rhs)
+    }
+    return self.init((lhs.value as! Double) * Double(rhs))
+  }
+  
+  public static func *(lhs: Int, rhs: RoxNumber) -> Self {
+    if rhs.value is Int {
+      return self.init(lhs * (rhs.value as! Int))
+    }
+    return self.init(Double(lhs) * (rhs.value as! Double))
+  }
+  
+  public static func *(lhs: RoxNumber, rhs: Double) -> Self {
+    if lhs.value is Int {
+      return self.init(Double((lhs.value as! Int)) * rhs)
+    }
+    return self.init((lhs.value as! Double) * rhs)
+  }
+  
+  public static func *(lhs: Double, rhs: RoxNumber) -> Self {
+    if rhs.value is Int {
+      return self.init(lhs * Double((rhs.value as! Int)))
+    }
+    return self.init(lhs * (rhs.value as! Double))
+  }
+  
+  // /
   public static func /(lhs: RoxNumber, rhs: RoxNumber) -> Self {
     return self.init(divide(a: lhs, b: rhs))
+  }
+  
+  public static func /(lhs: RoxNumber, rhs: Int) -> Self {
+    if lhs.value is Int {
+      return self.init(Double((lhs.value as! Int)) / Double(rhs))
+    }
+    return self.init((lhs.value as! Double) / Double(rhs))
+  }
+  
+  public static func /(lhs: Int, rhs: RoxNumber) -> Self {
+    if rhs.value is Int {
+      return self.init(Double(lhs) / Double((rhs.value as! Int)))
+    }
+    return self.init(Double(lhs) / (rhs.value as! Double))
+  }
+  
+  public static func /(lhs: RoxNumber, rhs: Double) -> Self {
+    if lhs.value is Int {
+      return self.init(Double((lhs.value as! Int)) / rhs)
+    }
+    return self.init((lhs.value as! Double) / rhs)
+  }
+  
+  public static func /(lhs: Double, rhs: RoxNumber) -> Self {
+    if rhs.value is Int {
+      return self.init(lhs / Double((rhs.value as! Int)))
+    }
+    return self.init(lhs / (rhs.value as! Double))
   }
   
   public static func %(lhs: RoxNumber, rhs: RoxNumber) -> Self {
     return self.init(subtract(a: lhs, b: rhs))
   }
+  
+  public static func %(lhs: RoxNumber, rhs: Int) -> Self {
+    if lhs.value is Int {
+      return self.init((lhs.value as! Int) % rhs)
+    }
+    return self.init((lhs.value as! Double).truncatingRemainder(dividingBy: Double(rhs)))
+  }
+  
+  public static func %(lhs: Int, rhs: RoxNumber) -> Self {
+    if rhs.value is Int {
+      return self.init(lhs % (rhs.value as! Int))
+    }
+    return self.init(Double(lhs).truncatingRemainder(dividingBy: (rhs.value as! Double)))
+  }
+  
+  public static func %(lhs: RoxNumber, rhs: Double) -> Self {
+    if lhs.value is Int {
+      return self.init(Double((lhs.value as! Int)).truncatingRemainder(dividingBy:rhs))
+    }
+    return self.init((lhs.value as! Double).truncatingRemainder(dividingBy: rhs))
+  }
+  
+  public static func %(lhs: Double, rhs: RoxNumber) -> Self {
+    if rhs.value is Int {
+      return self.init(lhs.truncatingRemainder(dividingBy: Double((rhs.value as! Int))))
+    }
+    return self.init(lhs.truncatingRemainder(dividingBy: rhs.value as! Double))
+  }
+  
   
   /* Equality */
   

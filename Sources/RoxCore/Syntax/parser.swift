@@ -97,7 +97,7 @@ public class Parser {
   }
 
   private func parseAssignmentExpression() throws -> Expression {
-    let expression = try parseOrExpression()
+    let expression = try parseRangeExpression()
 
     if match(.Operator("=")) {
       let equals = previous()
@@ -111,6 +111,16 @@ public class Parser {
     }
     return expression
   }
+  
+    private func parseRangeExpression() throws -> Expression {
+      let expression = try parseOrExpression()
+      if match(.Operator("...")) {
+        let `operator` = previous()
+        let right = try parseOrExpression()
+        return Expression.Range(expression, `operator`, right)
+      }
+      return expression
+    }
   
   private func parseOrExpression() throws -> Expression {
     var expression = try parseAndExpression()
@@ -141,16 +151,6 @@ public class Parser {
     }
     return expression
   }
-  
-//  private func parseRangeExpression() throws -> Expression {
-//    let expression = try parseComparisonExpression()
-//    if match(.Operator("..")) {
-//      let `operator` = previous()
-//      let right = try parseComparisonExpression()
-//      return Expression.Range(expression, `operator`, right)
-//    }
-//    return expression
-//  }
   
   private func parseComparisonExpression() throws -> Expression {
     var expression = try parseTermExpression()
@@ -244,7 +244,7 @@ public class Parser {
   private func parseStatement() throws -> Statement {
     do {
       if match(.Punctuation("{")) { return try Statement.Block(parseBlockStatement()) }
-//      if match(.Reserved("for")) { return try parseForStatement() }
+      if match(.Reserved("for")) { return try parseForStatement() }
       if match(.Reserved("if")) { return try parseIfStatement() }
       if match(.Reserved("print")) { return try parsePrintStatement() }
       if match(.Reserved("return")) { return try parseReturnStatement() }
