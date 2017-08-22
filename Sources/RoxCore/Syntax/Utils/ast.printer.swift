@@ -52,11 +52,11 @@ public class ASTPrinter: ExpressionVisitor {
     return expression.name.lexeme
   }
   
-  private func parenthesize(_ name: String, _ expressions: Expression...) throws -> String {
+  private func parenthesize(_ name: String, _ expressions: Expression?...) throws -> String {
     var str = "(" + name
     for expression in expressions {
       str.append(" ")
-      str.append(castString(try expression.accept(visitor: self)))
+      str.append(expression == nil ? "0" : castString(try expression?.accept(visitor: self)))
     }
     str.append(")")
     return str

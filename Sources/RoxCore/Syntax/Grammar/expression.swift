@@ -92,7 +92,17 @@ public class Expression {
     }
   }
   
-  public class Range: Binary {
+  public class Range: Expression {
+    private(set) var `operator`: Token
+    private(set) var right: Expression?
+    private(set) var left: Expression?
+    
+    public init(_ left: Expression?, _ token: Token, _ right: Expression?) {
+      self.left = left
+      self.operator = token;
+      self.right = right
+    }
+    
     public override func accept(visitor: ExpressionVisitor) throws -> Any? {
       return try visitor.visit(expression: self)
     }

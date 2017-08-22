@@ -177,23 +177,18 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   }
   
   public func visit(expression: Expression.Range) throws -> Any? {
-    let left = try evaluate(expression.left)
-    let right = try evaluate(expression.right)
+    let left = expression.left == nil ? 0 : try evaluate(expression.left!)
+    let right = expression.right == nil ? 0 : try evaluate(expression.right!)
+    
     if left is RoxNumberType && right is RoxNumberType {
-      if left is Double && right is Double {
-        let a = left as! Double
-        let b = right as! Double
-        if a > b { return stride(from: b, to: a, by: -1) }
-        else { return (a..<b) }
-      }
       
+      // Int && Int
       if left is Int && right is Int {
-        let a = left as! Int
-        let b = right as! Int
-        if a > b { return stride(from: b, to: a, by: -1) }
-        else { return (a..<b) }
+        return RoxRange(RoxNumber(left as! Int), RoxNumber(right as! Int), 1)
       }
       
+      return RoxRange(RoxNumber(left!), RoxNumber(right!), 0.1)
+
     }
     throw RoxRuntimeException.error(expression.operator, "Operands must be numbers of the same type")
   }
@@ -233,11 +228,22 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   }
   
   public func visit(statement: Statement.For) throws {
-    environment.define((statement.name?.lexeme)!, 0)
-    if statement.index != nil {
-      environment.define((statement.index?.lexeme)!, 0)
+
+    if statement.expression is Expression.Range {
+      let expression = (statement.expression as! Expression.Range)
+      let value = (try evaluate(expression) as! RoxRange);
+      var index = 0
+      for (element) in value {
+        self.environment.define((statement.name?.lexeme)!, element)
+        if statement.index != nil {
+          self.environment.define((statement.index?.lexeme)!, index)
+          index = index + 1
+        }
+        try execute(statement.body)
+      }
     }
-    print("warn: for-loop not implemented")
+    
+//    print("warn: for-loop not implemented")
   }
   
   public func visit(statement: Statement.Function) throws {
