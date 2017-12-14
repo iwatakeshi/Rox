@@ -122,7 +122,11 @@ public class Rox {
     let syntax = try parser.parseRepl()
     if errored { return }
     
+    let resolver = Resolver(interpreter)
+    
     if syntax is [Statement] {
+      resolver.resolve(syntax as! [Statement])
+      if errored { return }
       interpreter.interpret(syntax as! [Statement])
     } else if syntax is Expression {
       let result = interpreter.interpret(syntax as! Expression)
@@ -137,6 +141,10 @@ public class Rox {
   public static func error(_ type: RoxException) {
     
     switch type {
+    case .RoxSemanticException(.error(let token, let message)):
+      print("Error (\(token.location.line),\(token.location.column)): \(message).")
+      runtimeErrored = false
+      break
     case .RoxRuntimeException(.error(let token, let message)):
       print("Error (\(token.location.line),\(token.location.column)): \(message).")
       runtimeErrored = true

@@ -14,6 +14,7 @@ import Foundation
 public class Interpreter : ExpressionVisitor, StatementVisitor {
 
   private(set) var globals = Environment()
+  private(set) var locals = Dictionary<Expression, Int>()
   private(set) var environment: Environment
   
   public init() {
@@ -60,11 +61,30 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     }
   }
   
+  public func resolve(_ expression: Expression, _ depth: Int) {
+    locals[expression] = depth;
+  }
+  
+  public func lookupVariable(_ expression: Expression, _ name: Token) throws -> Any? {
+    let distance = locals[expression];
+    if distance != nil && distance! >= 0 {
+      return environment.getAt(distance!, name.lexeme)
+    }
+    return try? globals.get(name)!
+  }
+  
   /* Expressions */
   
   public func visit(expression: Expression.Assignment) throws -> Any? {
     let value = try evaluate(expression.value)
-    try environment.assign(expression.name, value)
+    
+    let distance = locals[expression]
+    if distance != nil && distance! >= 0 {
+      environment.assignAt(distance!, expression.name, value as Any)
+    } else {
+      try globals.assign(expression.name, value)
+    }
+    
     return value
   }
 

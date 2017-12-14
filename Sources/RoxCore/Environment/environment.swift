@@ -35,6 +35,10 @@ public class Environment {
     
     throw RoxRuntimeException.error(name, "Undefined variable '\(name.lexeme)'")
   }
+  
+  public func getAt(_ distance: Int, _ name: String) -> Any? {
+    return ancestor(distance).values[name] as Any;
+  }
 
   public func assign(_ name: Token, _ value: Any?) throws {
     if values[name.lexeme] != nil {
@@ -48,6 +52,18 @@ public class Environment {
     }
     
     throw RoxRuntimeException.error(name, "Undefined variable '\(name.lexeme)\'")
+  }
+  
+  public func assignAt(_ distance: Int, _ name: Token, _ value: Any) {
+    ancestor(distance).values[name.lexeme] = value;
+  }
+  
+  public func ancestor(_ distance: Int) -> Environment {
+    var environment = self
+    for _ in 0...distance {
+      environment = environment.enclosing!
+    }
+    return environment
   }
   
 }

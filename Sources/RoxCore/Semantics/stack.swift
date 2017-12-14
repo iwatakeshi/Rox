@@ -6,34 +6,55 @@
 //
 
 import Foundation
-
-struct Stack<Element> {
-  private var items = [Element]();
-  mutating func push(_ item: Element) {
-    items.append(item);
-  }
-  mutating func pop() -> Element {
-    return items.removeLast();
+/*
+ Last-in first-out stack (LIFO)
+ Push and pop are O(1) operations.
+ */
+public struct Stack<T> {
+  fileprivate var array = [T]()
+  
+  public var isEmpty: Bool {
+    return array.isEmpty
   }
   
-  var top: Element? {
-    return items.isEmpty ? nil : items[items.count - 1];
+  public var count: Int {
+    return array.count
   }
   
-  var isEmpty: Bool {
-    return items.isEmpty;
+  public mutating func push(_ element: T) {
+    array.append(element)
   }
   
-  var count: Int {
-    return items.count;
+  @discardableResult
+  public mutating func pop() -> T? {
+    return array.popLast()
+  }
+  
+  public var top: T? {
+    get {
+      return array.last
+    }
+    set(newValue) {
+      array[array.count - 1] = newValue!;
+    }
   }
 }
 
-
-extension Stack {
-  subscript (position: Index) -> Element {
-    precondition(items.count > position, "Index out of bounds.")
-    let dictionaryElement = items[position]
-    return (element: dictionaryElement.key, count: dictionaryElement.value)
+extension Stack: Sequence {
+  public func makeIterator() -> AnyIterator<T> {
+    var curr = self
+    return AnyIterator {
+      return curr.pop()
+    }
+  }
+  subscript (position: Int) -> T {
+    get {
+      precondition(position <= array.count, "Index out of bounds.")
+      return array[position]
+    }
+    set (newValue) {
+      precondition(position <= array.count, "Index out of bounds.")
+      array[position] = newValue;
+    }
   }
 }
