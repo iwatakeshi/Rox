@@ -20,9 +20,12 @@ A fun and simple languange for smarties
 ```
 program                   → declaration* EOF ;
 
-declaration               → func-declaration
-                          → var-declaration
+declaration               → class-declaration
+                          | func-declaration
+                          | var-declaration
                           | statement ;
+
+class declaration         → "class" IDENTIFIER "{" function* "}";
 
 func-declaration          → "func" function ;
 
@@ -57,7 +60,7 @@ block-statement           → "{" declaration* "}" ;
 
 expression                → assignment ;
 
-assignment                → IDENTIFIER "=" assignment
+assignment                → ( call "." )? IDENTIFIER "=" assignment
                           | logical-or ;
 
 logical-or                → logical-and ("or" logical-or)* ;
@@ -75,7 +78,7 @@ multiplication            → unary ( ( "/" | "*" ) unary )* ;
 unary                     → ( "!" | "-" ) unary 
                           | call ;
 
-call                      → primary ( "(" arguments? ")" )* ;
+call                      → primary ( "(" arguments? ")" | "." IDENTIFIER)* ;
 
 arguments                 → expression ("," expression)* ;
 

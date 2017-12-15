@@ -60,6 +60,20 @@ public class Expression: Hashable {
       return try visitor.visit(expression: self)
     }
   }
+
+  public class Get: Expression {
+    private(set) var object: Expression
+    private(set) var name: Token
+    public init(_ object: Expression, _ name: Token) {
+      self.object = object
+      self.name = name
+      super.init()
+      self.hashValue = object.hashValue ^ name.lexeme.hashValue
+    }
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)
+    }
+  }
   
   public class Function : Expression {
     private(set) var parameters: [Token]
@@ -91,6 +105,22 @@ public class Expression: Hashable {
   }
   
   public class Logical: Binary {
+    public override func accept(visitor: ExpressionVisitor) throws -> Any? {
+      return try visitor.visit(expression: self)
+    }
+  }
+
+  public class Set: Expression {
+    private(set) var object: Expression
+    private(set) var name: Token
+    private(set) var value: Expression
+    public init(_ object: Expression, _ name: Token, _ value: Expression) {
+      self.object = object
+      self.name = name
+      self.value = value
+      super.init()
+      self.hashValue = object.hashValue ^ name.lexeme.hashValue ^ value
+    }
     public override func accept(visitor: ExpressionVisitor) throws -> Any? {
       return try visitor.visit(expression: self)
     }

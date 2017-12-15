@@ -108,6 +108,9 @@ public class Parser {
         return Expression.Assignment(name, value)
       }
       throw error(equals, "Invalid assignment target")
+    } else if expression is Expression.Get {
+      let `get` = (expression as! Expression.Get)
+      return Expression.Set(`get`.object, `get`.name, value)
     }
     return expression
   }
@@ -198,7 +201,10 @@ public class Parser {
     while true {
       if match(.Punctuation("(")) {
         expression = try finishCall(expression)
-      }  else { break }
+      } else if match(.Punctuation(".")) {
+        let name = try consume(.Identifier, "Expect property name after '.'")
+        expression = Expression.Get(expression, name);
+      } else { break }
     }
     return expression
   }
@@ -229,6 +235,10 @@ public class Parser {
   
   private func parseDeclarationStatement() throws -> Statement? {
     do {
+
+      if match(.Reserved("class")) {
+        return try parseClassDeclaration();
+      }
       if check(.Reserved("func")) && check(.Identifier, 1) {
         try consume(.Reserved("func"), "")
         return try parseFunctionStatement("function")
@@ -260,6 +270,20 @@ public class Parser {
     }
     try consume(.Punctuation("}"), "Expect '}' after block")
     return statements
+  }
+
+  private func parseClassDeclaration() throws -> Statement {
+    let name = try consume(.Identifier, "Expect class name")
+    try consume(.Punctuation("{"), "Expect '{' before class body")
+
+    var methods = [Statement.Function]();
+    while !check(.Punctuation("}")) && !isEOF {
+      methods.append(try parseFunctionStatement("method"))
+    }
+
+    try consume(.Punctuation("}"), "Expect '}' after class body")
+    
+    return Statement.Class(name, methods)
   }
   
   private func parseExpressionStatement() throws -> Statement {

@@ -172,6 +172,15 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
     }
     return nil
   }
+
+  public func visit(expression: Expression.Get) throws -> Any? {
+    let object = try evaluate(expression.object)
+    if (object is RoxClassInstance) {
+      return try (object as RoxClassInstance).get(expression.name)
+    }
+
+    throw RoxRuntimeException.error(expression.name, "Only instances have properties")
+  }
   
   public func visit(expression: Expression.Function) throws -> Any? {
     let function = RoxFunction(expression, environment)
@@ -190,6 +199,18 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
       if (!isTruthy(left)) { return left}
     }
     return try evaluate(expression.right)
+  }
+
+  public func visit(expression: Expression.Set) throws -> Any? {
+    let object = try evaluate(expression.object)
+    
+    if !(object is RoxClassInstance) {
+      throw RoxRuntimeException.error(expression.name, "Only instances have fields")
+    }
+
+    let value = try evaluate(expression.value)
+    (object as RoxClassInstance).set(expression.name, value)
+    return value
   }
   
   public func visit(expression: Expression.Parenthesized) throws -> Any? {
@@ -241,6 +262,17 @@ public class Interpreter : ExpressionVisitor, StatementVisitor {
   
   public func visit(statement: Statement.Block) throws {
     try execute(statement.statements, Environment(environment))
+  }
+
+  public func visit(statement: Statement.Class) throws {
+    environment.define(statement.name.lexeme, nil)
+    var methods = Dictionary<String, RoxFunction>()
+    for method in statement.methods {
+      let function = RoxFunction(method, environment)
+      methods[method.name.lexeme] = function
+    }
+    let `class` = RoxClass(statement.name.lexeme, methods);
+    try environment.assign(statement.name, `class`)
   }
   
   public func visit(statement: Statement.Expression) throws {

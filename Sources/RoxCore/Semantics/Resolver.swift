@@ -11,6 +11,7 @@ class Resolver : ExpressionVisitor, StatementVisitor {
   public enum FunctionType {
     case None
     case Function
+    case Method
   }
   private(set) var interpreter: Interpreter
   private(set) var scopes = Stack<Dictionary<String, Bool>>();
@@ -40,6 +41,10 @@ class Resolver : ExpressionVisitor, StatementVisitor {
     
     return nil
   }
+
+  func visit(expression: Expression.Get) throws -> Any? {
+    return nil
+  }
   
   func visit(expression: Expression.Function) throws -> Any? {
     return nil
@@ -53,6 +58,12 @@ class Resolver : ExpressionVisitor, StatementVisitor {
     return nil
   }
   
+  func visit(expression: Expression.Set) throws -> Any? {
+    resolve(expression.value)
+    resolve(expression.object)
+    return nil
+  }
+
   func visit(expression: Expression.Parenthesized) throws -> Any? {
     resolve(expression.expression)
     return nil
@@ -71,10 +82,20 @@ class Resolver : ExpressionVisitor, StatementVisitor {
     return nil
   }
   
-  public func visit(statement: Statement.Block) throws {
+  func visit(statement: Statement.Block) throws {
     startScope()
     resolve(statement.statements)
     endScope()
+  }
+
+  func visit(statement: Statement.Class) throws {
+    declare(statement.name)
+    define(statement.name)
+
+    for method in statement.methods {
+      let declaration = FunctionType.Method
+      resolveFunction(method, declaration)
+    }
   }
   
   func visit(statement: Statement.Expression) throws {

@@ -24,6 +24,19 @@ public class Statement {
       try visitor.visit(statement: self)
     }
   }
+
+  public class Class : Statement {
+    private(set) var name: Token;
+    private(set) var methods: [Statement.Function]
+    public  init(_ name: Token, _ methods: [Statement.Function]) {
+      self.name = name;
+      self.methods = methods;
+    }
+
+    public override func accept(visitor: StatementVisitor) throws {
+      try visitor.visit(statement: self);
+    }
+  }
   
   public class Expression : Statement {
     private(set) var expression: RoxCore.Expression
